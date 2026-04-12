@@ -1,7 +1,7 @@
 # NJOY EMLAK VERİTABANI PROJESİ - TEKNİK RAPOR
 
 ## 1. GİRİŞ VE PROJENİN AMACI
-Bu proje kapsamında gerçek hayattan, aktif olarak faaliyet gösteren **Njoy Emlak (http://www.njoyemlak.com/)** platformu baz alınarak rölyasyonel (ilişkisel) bir veritabanı tasarlanmıştır. Veritabanının amacı; gayrimenkul ofisinin portföyündeki ilanları, emlak danışmanlarını, gayrimenkullerin iç, dış ve cephe gibi detaylı özelliklerini tek bir sistemde bütünleşik bir biçimde saklamak ve bu verilerden anlamlı raporlar çekebilmektir. 
+Bu proje kapsamında gerçek hayattan, ekip arkadaşımız Alper Güner'in dayısının aktif olarak faaliyet gösteren emlak şirketi **Njoy Emlak (http://www.njoyemlak.com/)** platformu baz alınarak rölyasyonel (ilişkisel) bir veritabanı tasarlanmıştır. Veritabanının amacı; gayrimenkul ofisinin portföyündeki ilanları, emlak danışmanlarını, gayrimenkullerin iç, dış ve cephe gibi detaylı özelliklerini tek bir sistemde bütünleşik bir biçimde saklamak ve bu verilerden anlamlı raporlar çekebilmektir. 
 
 Veritabanı yapılandırılırken platformdaki güncel 5 farklı ilan veri olarak çekilmiş, ilanların tüm teknik özellikleri (iç, dış ve cephe verileri) baz alınarak sisteme dahil edilmiştir. SQL kodları platform bağımsız, en yaygın kullanılan dosya tabanlı veritabanı sistemi olan **SQLite** altyapısına uyumlu olarak (`AUTOINCREMENT` yapısıyla) yazılmış ve derlenmiştir.
 
