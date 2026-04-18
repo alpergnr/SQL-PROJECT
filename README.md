@@ -167,4 +167,4 @@ sqlite3 yeni.db < njoy_veritabani.sql
 
 ---
 
-> Veri Kaynağı: njoyemlak.com · Veriler aktif portföyden manuel olarak toplanmıştır.
+
