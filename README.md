@@ -1,6 +1,6 @@
 # 🏢 Njoy Emlak — Relational Database Project
 
-> 📍 Real data source: **[njoyemlak.com]([http://www.njoyemlak.com/](https://njoy.sahibinden.com/))** — An SQLite database designed based on the portfolio of an active real estate office in Istanbul.
+> 📍 Real data source: **[njoyemlak.com](https://njoy.sahibinden.com/)** — An SQLite database designed based on the portfolio of an active real estate office in Istanbul.
 
 ---
 
@@ -15,7 +15,7 @@
 
 ## 📌 Project Idea
 
-This project was created as a **solution to a real-world problem**. Our team member **Alper Güner**'s uncle's actively operating real estate company **[Njoy Emlak]([http://www.njoyemlak.com/](https://njoy.sahibinden.com/))** is the direct inspiration and data source for this project.
+This project was created as a **solution to a real-world problem**. Our team member **Alper Güner**'s uncle's actively operating real estate company **[Njoy Emlak](https://njoy.sahibinden.com/)** is the direct inspiration and data source for this project.
 
 As their portfolios grow, small and medium-sized real estate offices struggle to manage listing, agent, and feature data effectively. Dependency on scattered Excel files and third-party platforms leads to critical issues such as **data redundancy**, **update anomalies**, and **insufficient reporting**.
 
