@@ -6,6 +6,7 @@
 
 ## 👥 Team Members
 
+| | | |
 |:---|:---|:---|
 | Altay Yeles | Alper Güner | Mustafa Ulaş Karaaslan |
 | Mehmet Can Öztürk | Emre Aslan | 
