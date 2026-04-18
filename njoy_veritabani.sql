@@ -119,7 +119,7 @@ INSERT INTO Emlak_Ozellikleri (IlanID, OzellikID) VALUES
 -- ==============================================================================
 -- 3. VERİ ÇEKME - SQL SORGULARI VE RAPORLANACAK ÖNEMLİ VERİLER
 
--- Soru 1: Web sitesindeki tüm mevcut ilanları, danışman bilgileriyle beraber listele.
+-- Sorgu 1: Web sitesindeki tüm mevcut ilanları, danışman bilgileriyle beraber listele.
 /*
 SELECT E.Baslik, E.Fiyat, E.İlce, E.Mahalle, E.EmlakTipi, 
        K.AdSoyad AS [Danisman_Adi], K.Telefon 
@@ -127,7 +127,7 @@ FROM Emlaklar E
 INNER JOIN Ekip K ON E.DanismanID = K.DanismanID;
 */
 
--- Soru 2: Sadece 'Şişli' veya 'Beyoğlu' ilçesindeki 40,000 TL ve altı fiyattaki ilanlar.
+-- Sorgu 2: Sadece 'Şişli' veya 'Beyoğlu' ilçesindeki 40,000 TL ve altı fiyattaki ilanlar.
 /*
 SELECT Baslik, Fiyat, İlce, Mahalle 
 FROM Emlaklar 
@@ -135,7 +135,7 @@ WHERE Fiyat <= 40000 AND İlce IN ('Şişli', 'Beyoğlu')
 ORDER BY Fiyat DESC;
 */
 
--- Soru 3: Her danışmanın sisteme kayıtlı kaç ilanı var ve bu ilanların toplam değeri ne kadar?
+-- Sorgu 3: Her danışmanın sisteme kayıtlı kaç ilanı var ve bu ilanların toplam değeri ne kadar?
 /*
 SELECT K.AdSoyad, COUNT(E.IlanID) AS ToplamIlanSayisi, SUM(E.Fiyat) AS ToplamPortfoyDegeri
 FROM Ekip K
@@ -143,7 +143,7 @@ LEFT JOIN Emlaklar E ON K.DanismanID = E.DanismanID
 GROUP BY K.AdSoyad;
 */
 
--- Soru 4: 'Asansör' (Dış Özellik) veya 'Klima' (İç Özellik) barındıran tüm ilanları bulma.
+-- Sorgu 4: 'Asansör' (Dış Özellik) veya 'Klima' (İç Özellik) barındıran tüm ilanları bulma.
 /*
 SELECT DISTINCT E.Baslik, E.Fiyat, Oz.OzellikAdi, Kat.KategoriAdi
 FROM Emlaklar E
@@ -153,7 +153,7 @@ INNER JOIN Ozellik_Kategorileri Kat ON Oz.KategoriID = Kat.KategoriID
 WHERE Oz.OzellikAdi IN ('Asansör', 'Klima');
 */
 
--- Soru 5: İlanların metrekare başına ortalama fiyatını (Brüt ve Net) bulmak.
+-- Sorgu 5: İlanların metrekare başına ortalama fiyatını (Brüt ve Net) bulmak.
 /*
 SELECT Baslik, Fiyat, BrutM2, NetM2, 
        (Fiyat / BrutM2) AS BrutM2_Fiyati, 
