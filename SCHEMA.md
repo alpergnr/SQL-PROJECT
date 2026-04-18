@@ -141,4 +141,4 @@ Resolves the **many-to-many (M:N)** relationship between Emlaklar and Ozellikler
 
 ---
 
-> **Data Source:** All data was manually collected (data scraping) from njoyemlak.com.
+> **Data Source:** All data was manually collected (data scraping) from **[njoyemlak.com](https://njoy.sahibinden.com/)**.
