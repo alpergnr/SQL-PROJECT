@@ -1,10 +1,10 @@
-# 🏢 Njoy Emlak — İlişkisel Veritabanı Projesi
+# 🏢 Njoy Emlak — Relational Database Project
 
-> 📍 Gerçek veri kaynağı: **[njoyemlak.com](http://www.njoyemlak.com/)** — İstanbul'da aktif bir gayrimenkul ofisinin portföyü üzerine tasarlanmış SQLite veritabanı.
+> 📍 Real data source: **[njoyemlak.com](http://www.njoyemlak.com/)** — An SQLite database designed based on the portfolio of an active real estate office in Istanbul.
 
 ---
 
-## 👥 Ekip Üyeleri
+## 👥 Team Members
 
 | | | |
 |:---|:---|:---|
@@ -13,91 +13,91 @@
 
 ---
 
-## 📌 Proje Fikri
+## 📌 Project Idea
 
-Bu proje, **gerçek hayattaki bir problemin çözümü** olarak ortaya çıkmıştır. Ekip arkadaşımız **Alper Güner**'in dayısının aktif olarak faaliyet gösteren emlak şirketi **[Njoy Emlak](http://www.njoyemlak.com/)** bu projenin doğrudan ilham ve veri kaynağıdır.
+This project was created as a **solution to a real-world problem**. Our team member **Alper Güner**'s uncle's actively operating real estate company **[Njoy Emlak](http://www.njoyemlak.com/)** is the direct inspiration and data source for this project.
 
-Küçük ve orta ölçekli emlak ofisleri, portföyleri büyüdükçe ilan, danışman ve özellik verilerini sağlıklı biçimde yönetmekte zorlanır. Dağıtık Excel dosyaları ve hazır platformlara bağımlılık; **veri tekrarı**, **güncelleme anomalileri** ve **yetersiz raporlama** gibi kritik sorunlara yol açmaktadır.
+As their portfolios grow, small and medium-sized real estate offices struggle to manage listing, agent, and feature data effectively. Dependency on scattered Excel files and third-party platforms leads to critical issues such as **data redundancy**, **update anomalies**, and **insufficient reporting**.
 
-Bu proje, söz konusu sorunları çözmek amacıyla Njoy Emlak ofisinin **gerçek portföyü** üzerinden normalize edilmiş ve sorgulanabilir bir ilişkisel veritabanı tasarlamak için başlatılmıştır.
+This project was initiated to design a normalized and queryable relational database based on the **actual portfolio** of the Njoy Emlak office to solve these problems.
 
-> ⚠️ **Veri Toplama Yöntemi:** Veritabanındaki tüm ilan verileri **njoyemlak.com** sitesinden **manuel olarak toplanmıştır (data scraping)**. 5 aktif ilan ile bu ilanların tüm iç özellik, dış özellik ve cephe bilgileri sisteme girilmiştir. Yapay veya uydurma veri kullanılmamıştır.
+> ⚠️ **Data Collection Method:** All listing data in the database was **manually collected (data scraping)** from **njoyemlak.com**. 5 active listings along with all their interior features, exterior features, and orientation details were entered into the system. No artificial or fabricated data was used.
 
 ---
 
-## 🎯 Neden Önemli?
+## 🎯 Why Is It Important?
 
-| Mevcut Sorun | Sağlanan Çözüm |
+| Current Problem | Provided Solution |
 |:---|:---|
-| Dağıtık ilan yönetimi | Tek merkezi, normalize edilmiş veritabanı |
-| Danışman değişince veriler bozulur | Foreign Key ile referans bütünlüğü |
-| Özellik bazlı arama yapılamıyor | Junction tablosu + zincirleme JOIN |
-| Portföy performansı ölçülemiyor | GROUP BY + SUM + COUNT analizleri |
-| m² başına fiyat hesaplanamıyor | Aritmetik operatörlerle anlık hesaplama |
+| Scattered listing management | Single centralized, normalized database |
+| Data breaks when agents change | Referential integrity via Foreign Keys |
+| No feature-based search capability | Junction table + chained JOINs |
+| Portfolio performance cannot be measured | GROUP BY + SUM + COUNT analyses |
+| Price per m² cannot be calculated | Instant calculation with arithmetic operators |
 
 ---
 
-## 📁 Repo Yapısı
+## 📁 Repository Structure
 
 ```
 njoy-emlak-db/
-├── README.md                          ← Bu dosya
-├── SCHEMA.md                          ← ERD ve tablo açıklamaları
-├── njoy_veritabani.sql                ← Veritabanı oluşturma + veri scripti
-├── njoyemlak.db                       ← Derlenmiş SQLite veritabanı
-└── Teknik_Rapor.pdf                   ← Teknik rapor
+├── README.md                          ← This file
+├── SCHEMA.md                          ← ERD and table descriptions
+├── njoy_veritabani.sql                ← Database creation + data script
+├── njoyemlak.db                       ← Compiled SQLite database
+└── Teknik_Rapor.pdf                   ← Technical report
 ```
 
 ---
 
-## 🗄️ Şema Özeti
+## 🗄️ Schema Overview
 
-3NF hedeflenerek **5 tablo** tasarlanmıştır. Tablolar arası ilişkiler Foreign Key ile yönetilmekte; Emlaklar ile Özellikler arasındaki çoka-çok ilişki ayrı bir köprü tablosuyla çözülmektedir.
+**5 tables** were designed targeting 3NF. Relationships between tables are managed with Foreign Keys; the many-to-many relationship between Emlaklar and Ozellikler is resolved through a separate junction table.
 
 ```
 Ekip ──(1:N)──► Emlaklar
                     │
                    (N)
                     ▼
-          Emlak_Ozellikleri   ← köprü tablosu (M:N)
+          Emlak_Ozellikleri   ← junction table (M:N)
                     │
                    (N)
                     ▼
              Ozellikler ──(N:1)──► Ozellik_Kategorileri
 ```
 
-| Tablo | Kayıt | Açıklama |
+| Table | Records | Description |
 |:---|:---:|:---|
-| Ekip | 2 | Danışman ve mağaza sahibi |
-| Emlaklar | 5 | IlanID 1000–1004 arası gerçek ilanlar |
-| Ozellik_Kategorileri | 3 | İç Özellik / Dış Özellik / Cephe |
-| Ozellikler | 33 | Tüm özellik havuzu |
-| Emlak_Ozellikleri | 26 | İlan–özellik eşleştirmeleri |
+| Ekip | 2 | Agent and store owner |
+| Emlaklar | 5 | Real listings with IlanID 1000–1004 |
+| Ozellik_Kategorileri | 3 | Interior Feature / Exterior Feature / Orientation |
+| Ozellikler | 33 | Full feature pool |
+| Emlak_Ozellikleri | 26 | Listing–feature mappings |
 
-Tam ERD ve sütun detayları için → **[SCHEMA.md](./SCHEMA.md)**
+For the full ERD and column details → **[SCHEMA.md](./SCHEMA.md)**
 
 ---
 
-## ⚙️ Kullanılması Planlanan SQL Özellikleri
+## ⚙️ Planned SQL Features
 
-| # | Özellik | Amaç |
+| # | Feature | Purpose |
 |:---:|:---|:---|
-| 1 | `INNER JOIN` / `LEFT JOIN` | Tablolar arası birleştirme; danışman–ilan eşleştirmesi |
-| 2 | `WHERE` + `IN` / `BETWEEN` | Bölge, fiyat aralığı ve çoklu kriter filtresi |
-| 3 | `GROUP BY` + `HAVING` | Danışman bazlı portföy gruplama ve filtreleme |
-| 4 | `COUNT` / `SUM` / `AVG` | Toplam ilan, portföy değeri, ortalama m² fiyatı |
-| 5 | `ORDER BY` | Fiyat veya metrekareye göre sıralama |
-| 6 | `VIEW` | Sık kullanılan sorguların yeniden kullanılabilir görünüme dönüştürülmesi |
-| 7 | `CTE`  | Adım adım yapılandırılmış, okunabilir karmaşık sorgular |
-| 8 | `INDEX` | Fiyat ve ilçe sütunlarına index ile sorgu hızlandırma |
+| 1 | `INNER JOIN` / `LEFT JOIN` | Table joins; agent–listing matching |
+| 2 | `WHERE` + `IN` / `BETWEEN` | Region, price range, and multi-criteria filtering |
+| 3 | `GROUP BY` + `HAVING` | Agent-based portfolio grouping and filtering |
+| 4 | `COUNT` / `SUM` / `AVG` | Total listings, portfolio value, average price per m² |
+| 5 | `ORDER BY` | Sorting by price or square meters |
+| 6 | `VIEW` | Converting frequently used queries into reusable views |
+| 7 | `CTE` | Step-by-step structured, readable complex queries |
+| 8 | `INDEX` | Query acceleration via indexing on price and district columns |
 
 ---
 
-## 🔍 Örnek Sorgular
+## 🔍 Example Queries
 
-### Sorgu 1 — Genel İlan Listesi `(INNER JOIN)`
+### Query 1 — General Listing List `(INNER JOIN)`
 
-Tüm aktif ilanları sorumlu danışmanın adı ve iletişim bilgisiyle listeler.
+Lists all active listings with the responsible agent's name and contact information.
 
 ```sql
 SELECT E.Baslik, E.Fiyat, E.İlce, E.EmlakTipi,
@@ -109,9 +109,21 @@ INNER JOIN Ekip K ON E.DanismanID = K.DanismanID;
 
 ---
 
-### Sorgu 2 — Personel Portföy Analizi `(GROUP BY + SUM + COUNT)`
+### Query 2: Budget and Region Filtering (WHERE, IN)
 
-Her danışmanın yönettiği ilan sayısını ve toplam portföy değerini (TL) hesaplar. LEFT JOIN sayesinde henüz ilanı olmayan danışmanlar da listeye dahil edilir.
+The goal is to retrieve apartments with a budget of 40,000 TL or less, specifically in the Şişli and Beyoğlu districts (İstiklal, Cihangir, Firuzağa, etc.).
+
+```sql
+SELECT Baslik, Fiyat, İlce, Mahalle 
+FROM Emlaklar 
+WHERE Fiyat <= 40000 AND İlce IN ('Şişli', 'Beyoğlu')
+ORDER BY Fiyat DESC;
+```
+---
+
+### Query 3 — Staff Portfolio Analysis `(GROUP BY + SUM + COUNT)`
+
+Calculates the number of listings managed by each agent and the total portfolio value (TL). Thanks to LEFT JOIN, agents with no listings yet are also included in the list.
 
 ```sql
 SELECT K.AdSoyad,
@@ -124,9 +136,9 @@ GROUP BY K.AdSoyad;
 
 ---
 
-### Sorgu 3 — Özellik Bazlı Filtreleme `(4 Tablo JOIN)`
+### Query 4 — Feature-Based Filtering `(4-Table JOIN)`
 
-Asansörlü veya klimalı ilanları özellik kategorisiyle birlikte getirir. Dört tablonun zincirleme JOIN ile birleştirildiği bu sorgu, köprü tablosunun pratik kullanımını göstermektedir.
+Retrieves listings with elevator or air conditioning along with the feature category. This query, which chains four tables via JOIN, demonstrates the practical use of the junction table.
 
 ```sql
 SELECT DISTINCT E.Baslik, E.Fiyat,
@@ -140,9 +152,9 @@ WHERE  Oz.OzellikAdi IN ('Asansör', 'Klima');
 
 ---
 
-### Sorgu 4 — m² Başına Kira Maliyeti `(Aritmetik)`
+### Query 5 — Rent Cost per m² `(Arithmetic)`
 
-Her ilanın brüt ve net metrekare başına düşen aylık kira maliyetini hesaplar.
+Calculates the monthly rent cost per gross and net square meter for each listing.
 
 ```sql
 SELECT Baslik, Fiyat, BrutM2, NetM2,
@@ -155,16 +167,14 @@ ORDER BY NetM2_Fiyati DESC;
 
 ---
 
-## 🚀 Çalıştırma
+## 🚀 Running
 
 ```bash
-# Mevcut veritabanını aç
+# Open the existing database
 sqlite3 njoyemlak.db
 
-# SQL scriptinden sıfırdan oluştur
-sqlite3 yeni.db < njoy_veritabani.sql
+# Create from scratch using the SQL script
+sqlite3 new.db < njoy_veritabani.sql
 ```
 
 ---
-
-
