@@ -208,6 +208,8 @@ def build_parser() -> argparse.ArgumentParser:
 def validate_args(args: argparse.Namespace) -> None:
     if args.limit <= 0:
         raise AppError("--limit pozitif bir sayı olmalıdır.")
+    if getattr(args, "max_price", None) is not None and args.max_price < 0:
+        raise AppError("--max-price negatif olamaz.")
 
 
 def cmd_list(repo: NjoyRepository, args: argparse.Namespace) -> str:
@@ -267,7 +269,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             "search": cmd_search,
             "stats": cmd_stats,
         }
-        output = handlers[args.command](repo, args)
+        handler = handlers.get(args.command)
+        if handler is None:
+            raise AppError(f"Desteklenmeyen komut: {args.command}")
+        output = handler(repo, args)
         print(output)
         return 0
     except AppError as exc:
