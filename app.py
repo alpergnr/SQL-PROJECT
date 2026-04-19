@@ -53,11 +53,11 @@ class NjoyRepository:
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self._db_path))
-        conn.row_factory = sqlite3.Row
         # Keep relational integrity checks active for every connection.
         conn.execute("PRAGMA foreign_keys = ON;")
         # Reduce transient lock errors during concurrent reads/writes.
         conn.execute("PRAGMA busy_timeout = 3000;")
+        conn.row_factory = sqlite3.Row
         return conn
 
     def _timed_fetchall(
@@ -296,8 +296,14 @@ def validate_args(args: argparse.Namespace) -> None:
     if hasattr(args, "districts") and args.districts is not None:
         districts = [d.strip() for d in args.districts if d and d.strip()]
         if len(districts) != len(args.districts):
-            raise AppError("Tüm --district değerleri geçerli olmalıdır (boş olamaz).")
-        args.districts = list(dict.fromkeys(districts))
+            raise AppError("İlçe değerleri boş veya sadece boşluk karakterlerinden oluşamaz.")
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for district in districts:
+            if district not in seen:
+                seen.add(district)
+                deduped.append(district)
+        args.districts = deduped
     if hasattr(args, "feature") and args.feature is not None:
         feature = args.feature.strip()
         if not feature:

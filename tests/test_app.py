@@ -14,21 +14,15 @@ SQL_SCRIPT_PATH = REPO_ROOT / "njoy_veritabani.sql"
 
 
 class AppCLITests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls._tmpdir = tempfile.TemporaryDirectory()
-        cls.db_path = Path(cls._tmpdir.name) / "test.db"
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._tmpdir.cleanup()
-
     def setUp(self):
-        if self.db_path.exists():
-            self.db_path.unlink()
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self.db_path = Path(self._tmpdir.name) / "test.db"
         with sqlite3.connect(str(self.db_path)) as conn:
             script = SQL_SCRIPT_PATH.read_text(encoding="utf-8")
             conn.executescript(script)
+
+    def tearDown(self):
+        self._tmpdir.cleanup()
 
     def run_main(self, argv):
         out = io.StringIO()
