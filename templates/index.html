@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Njoy Emlak — İstanbul'un kalbinde premium emlak portföyü.">
+    <meta name="theme-color" content="#0a0a0f">
+    <title>Njoy Emlak — Premium Gayrimenkul</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="grain-overlay" aria-hidden="true"></div>
+
+    <!-- NAV -->
+    <nav class="main-nav" id="main-nav">
+        <div class="nav-inner">
+            <a href="#" class="nav-brand" id="nav-brand">
+                <span class="brand-icon">◆</span>
+                <span class="brand-text">NJOY<span class="brand-accent">EMLAK</span></span>
+            </a>
+            <div class="nav-links" id="nav-links">
+                <button class="nav-link active" data-tab="listings" id="nav-listings">
+                    <span class="nav-link-icon">⌂</span><span>İlanlar</span>
+                </button>
+                <button class="nav-link" data-tab="search" id="nav-search">
+                    <span class="nav-link-icon">⊕</span><span>Arama</span>
+                </button>
+                <button class="nav-link" data-tab="stats" id="nav-stats">
+                    <span class="nav-link-icon">◈</span><span>Danışmanlar</span>
+                </button>
+                <button class="nav-link" data-tab="benchmark" id="nav-benchmark">
+                    <span class="nav-link-icon">⚡</span><span>Performans</span>
+                </button>
+            </div>
+            <button class="nav-mobile-toggle" id="nav-mobile-toggle" aria-label="Menü">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero" id="hero-section">
+        <div class="hero-bg">
+            <div class="hero-gradient-orb hero-orb-1"></div>
+            <div class="hero-gradient-orb hero-orb-2"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">◆ İSTANBUL GAYRİMENKUL</div>
+            <h1 class="hero-title">
+                <span class="hero-title-line hero-title-line--1">Premium</span>
+                <span class="hero-title-line hero-title-line--2">Yaşam Alanları</span>
+            </h1>
+            <p class="hero-subtitle">Beyoğlu · Şişli · Taksim — Özenle seçilmiş portföy</p>
+            <div class="hero-stats" id="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-value" id="stat-total">—</span>
+                    <span class="hero-stat-label">Aktif İlan</span>
+                </div>
+                <div class="hero-stat-divider"></div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value" id="stat-agents">—</span>
+                    <span class="hero-stat-label">Danışman</span>
+                </div>
+                <div class="hero-stat-divider"></div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value" id="stat-districts">—</span>
+                    <span class="hero-stat-label">Bölge</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-scroll-cue" aria-hidden="true"><span class="scroll-line"></span></div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main-content" id="main-content">
+
+        <!-- LISTINGS -->
+        <section class="tab-panel active" id="panel-listings">
+            <div class="section-header">
+                <div class="section-header-text">
+                    <h2 class="section-title">Emlak Portföyü</h2>
+                    <p class="section-desc">Tüm aktif ilanları görüntüleyin.</p>
+                </div>
+                <div class="section-controls">
+                    <label class="control-group">
+                        <span class="control-label">Sıralama</span>
+                        <select id="listings-sort" class="control-select">
+                            <option value="fiyat_desc">Fiyat ↓</option>
+                            <option value="fiyat_asc">Fiyat ↑</option>
+                            <option value="m2_desc">m² ↓</option>
+                            <option value="ilanid_asc">İlan No ↑</option>
+                        </select>
+                    </label>
+                    <label class="control-group">
+                        <span class="control-label">Limit</span>
+                        <select id="listings-limit" class="control-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+            <div class="cards-grid" id="listings-grid">
+                <div class="loading-state"><span class="loader"></span><p>Yükleniyor…</p></div>
+            </div>
+        </section>
+
+        <!-- SEARCH -->
+        <section class="tab-panel" id="panel-search">
+            <div class="section-header">
+                <div class="section-header-text">
+                    <h2 class="section-title">Gelişmiş Arama</h2>
+                    <p class="section-desc">Bütçe, bölge ve özellik filtrelerini kullanın.</p>
+                </div>
+            </div>
+            <form class="search-form" id="search-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="search-max-price" class="form-label">Maks. Fiyat (₺)</label>
+                        <input type="number" id="search-max-price" class="form-input" placeholder="ör. 45000" min="0" step="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="search-district" class="form-label">İlçe</label>
+                        <select id="search-district" class="form-input"><option value="">Tümü</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="search-feature" class="form-label">Özellik</label>
+                        <select id="search-feature" class="form-input"><option value="">Tümü</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="search-limit" class="form-label">Limit</label>
+                        <select id="search-limit" class="form-input">
+                            <option value="5">5</option><option value="10">10</option><option value="20" selected>20</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" id="search-submit">
+                    <span class="btn-icon">⊕</span> Ara
+                </button>
+            </form>
+            <div class="cards-grid" id="search-grid">
+                <div class="empty-state"><span class="empty-icon">◇</span><p>Filtreleri seçin ve arama yapın.</p></div>
+            </div>
+        </section>
+
+        <!-- STATS -->
+        <section class="tab-panel" id="panel-stats">
+            <div class="section-header">
+                <div class="section-header-text">
+                    <h2 class="section-title">Danışman Portföyleri</h2>
+                    <p class="section-desc">İlan sayısı ve toplam portföy değeri.</p>
+                </div>
+            </div>
+            <div class="stats-container" id="stats-container">
+                <div class="loading-state"><span class="loader"></span><p>Yükleniyor…</p></div>
+            </div>
+        </section>
+
+        <!-- BENCHMARK -->
+        <section class="tab-panel" id="panel-benchmark">
+            <div class="section-header">
+                <div class="section-header-text">
+                    <h2 class="section-title">Sorgu Performansı</h2>
+                    <p class="section-desc">Veritabanı sorgularının yürütülme süreleri.</p>
+                </div>
+            </div>
+            <div class="benchmark-container" id="benchmark-container">
+                <button class="btn-primary" id="benchmark-run"><span class="btn-icon">⚡</span> Benchmark Çalıştır</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-brand"><span class="brand-icon">◆</span> NJOY EMLAK</div>
+            <p class="footer-copy">Veritabanı Projesi — 2026</p>
+            <p class="footer-team">Altay Yeles · Alper Güner · Mustafa Ulaş Karaaslan · Mehmet Can Öztürk · Emre Aslan</p>
+        </div>
+    </footer>
+
+    <div class="toast-container" id="toast-container"></div>
+    <script src="/static/app.js"></script>
+</body>
+</html>

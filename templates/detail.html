@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İlan Detay — Njoy Emlak</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* ── Detail Page ──────────────────────────────────────────────── */
+        .detail-main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: calc(var(--nav-h) + var(--space-xl)) var(--space-lg) var(--space-2xl);
+            min-height: 100vh;
+        }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: var(--fs-sm); color: var(--c-text-muted);
+            text-transform: uppercase; letter-spacing: .08em; font-weight: 600;
+            padding: 8px 18px;
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-pill);
+            transition: all .25s;
+        }
+        .btn-back:hover { color: var(--c-gold); border-color: var(--c-gold-dim); }
+
+        /* Hero */
+        .detail-hero {
+            background: linear-gradient(135deg, var(--c-bg-raised) 0%, var(--c-bg-card) 100%);
+            border: 1px solid var(--c-border-subtle);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl) var(--space-xl);
+            margin-bottom: var(--space-lg);
+            position: relative; overflow: hidden;
+        }
+        .detail-hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at top left, var(--c-gold-glow), transparent 60%);
+            pointer-events: none;
+        }
+        .detail-hero::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--c-gold-dim), var(--c-gold-bright), var(--c-gold-dim));
+        }
+        .detail-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: var(--fs-xs); color: var(--c-gold);
+            text-transform: uppercase; letter-spacing: .14em; font-weight: 700;
+            background: var(--c-gold-glow); border: 1px solid rgba(201,168,76,.2);
+            border-radius: var(--radius-pill); padding: 5px 14px;
+            margin-bottom: var(--space-md);
+        }
+        .detail-title {
+            font-family: var(--ff-display);
+            font-size: clamp(1.3rem, 3vw, 2rem);
+            font-weight: 700; color: var(--c-champagne);
+            line-height: 1.3; margin-bottom: var(--space-md);
+        }
+        .detail-price {
+            font-family: var(--ff-display);
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 800; color: var(--c-gold);
+        }
+        .detail-price .currency { font-size: .5em; color: var(--c-gold-dim); font-weight: 400; }
+
+        /* Info Grid */
+        .detail-section {
+            background: var(--c-bg-card);
+            border: 1px solid var(--c-border-subtle);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg) var(--space-xl);
+            margin-bottom: var(--space-lg);
+        }
+        .detail-section-title {
+            font-family: var(--ff-display);
+            font-size: var(--fs-md); font-weight: 700;
+            color: var(--c-gold); letter-spacing: .04em;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--c-border-subtle);
+        }
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--space-md);
+        }
+        .detail-info-item {
+            display: flex; flex-direction: column; gap: 4px;
+            padding: var(--space-sm) var(--space-md);
+            background: var(--c-bg-raised);
+            border: 1px solid var(--c-border-subtle);
+            border-radius: var(--radius-sm);
+        }
+        .detail-info-label {
+            font-size: var(--fs-xs); color: var(--c-text-dim);
+            text-transform: uppercase; letter-spacing: .1em; font-weight: 600;
+        }
+        .detail-info-value {
+            font-size: var(--fs-base); color: var(--c-text); font-weight: 500;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .detail-agent-avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: var(--c-gold-glow); border: 1px solid rgba(201,168,76,.25);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: var(--fs-xs); color: var(--c-gold); font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* Features */
+        .detail-features {
+            display: flex; flex-direction: column; gap: var(--space-lg);
+        }
+        .detail-feature-group {}
+        .detail-feature-cat {
+            font-size: var(--fs-sm); color: var(--c-gold-dim);
+            text-transform: uppercase; letter-spacing: .1em; font-weight: 700;
+            margin-bottom: var(--space-sm);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .detail-feature-tags {
+            display: flex; flex-wrap: wrap; gap: 8px;
+        }
+        .detail-feature-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: var(--fs-sm); color: var(--c-success);
+            background: rgba(92,184,122,.06);
+            border: 1px solid rgba(92,184,122,.18);
+            border-radius: var(--radius-pill);
+            padding: 5px 14px;
+        }
+        .detail-feature-tag::before { content: "✓"; font-weight: 700; }
+
+        /* Skeleton */
+        .detail-skeleton {
+            animation: skeletonPulse 1.5s ease-in-out infinite;
+            background: var(--c-bg-raised);
+            border-radius: var(--radius-md);
+        }
+        @keyframes skeletonPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+
+        @media (max-width: 600px) {
+            .detail-hero { padding: var(--space-lg); }
+            .detail-section { padding: var(--space-md); }
+            .detail-info-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grain-overlay" aria-hidden="true"></div>
+
+    <nav class="main-nav" id="main-nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">◆</span>
+                <span class="brand-text">NJOY<span class="brand-accent">EMLAK</span></span>
+            </a>
+            <a href="/" class="btn-back">← Tüm İlanlar</a>
+        </div>
+    </nav>
+
+    <main class="detail-main" id="detail-main">
+        <div class="loading-state"><span class="loader"></span><p>Yükleniyor…</p></div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-brand"><span class="brand-icon">◆</span> NJOY EMLAK</div>
+            <p class="footer-copy">Veritabanı Projesi — 2026</p>
+            <p class="footer-team">Altay Yeles · Alper Güner · Mustafa Ulaş Karaaslan · Mehmet Can Öztürk · Emre Aslan</p>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        const ILAN_ID = {{ ilan_id }};
+
+        function fmt(n) {
+            return new Intl.NumberFormat("tr-TR").format(n);
+        }
+
+        function val(v) {
+            return v != null && v !== "" ? v : "—";
+        }
+
+        async function load() {
+            const [info, features] = await Promise.all([
+                fetch(`/api/listing/${ILAN_ID}`).then(r => { if (!r.ok) throw new Error(); return r.json(); }),
+                fetch(`/api/listing/${ILAN_ID}/features`).then(r => r.json()),
+            ]);
+
+            document.title = `#${info.ilan_id} — Njoy Emlak`;
+
+            const initials = info.danisman.split(" ").map(w => w[0]).join("").slice(0, 2);
+
+            const catIcons = { "İç Özellik": "⌂", "Dış Özellik": "⊕", "Cephe": "◈" };
+            const featureCats = Object.entries(features);
+            const featuresHTML = featureCats.length ? `
+                <section class="detail-section">
+                    <h2 class="detail-section-title">◈ Özellikler</h2>
+                    <div class="detail-features">
+                        ${featureCats.map(([cat, items]) => `
+                        <div class="detail-feature-group">
+                            <h4 class="detail-feature-cat">${catIcons[cat] || "◆"} ${cat}</h4>
+                            <div class="detail-feature-tags">
+                                ${items.map(f => `<span class="detail-feature-tag">${f}</span>`).join("")}
+                            </div>
+                        </div>`).join("")}
+                    </div>
+                </section>` : "";
+
+            document.getElementById("detail-main").innerHTML = `
+                <div class="detail-hero">
+                    <div class="detail-badge">#${info.ilan_id} &nbsp;·&nbsp; ${val(info.emlak_tipi)}</div>
+                    <h1 class="detail-title">${info.baslik}</h1>
+                    <div class="detail-price">${fmt(info.fiyat)} <span class="currency">₺/ay</span></div>
+                </div>
+
+                <section class="detail-section">
+                    <h2 class="detail-section-title">◆ İlan Bilgileri</h2>
+                    <div class="detail-info-grid">
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">İl</span>
+                            <span class="detail-info-value">${val(info.il)}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">İlçe</span>
+                            <span class="detail-info-value">${val(info.ilce)}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">Mahalle</span>
+                            <span class="detail-info-value">${val(info.mahalle)}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">Emlak Tipi</span>
+                            <span class="detail-info-value">${val(info.emlak_tipi)}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">Brüt m²</span>
+                            <span class="detail-info-value">${val(info.brut_m2)}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">Net m²</span>
+                            <span class="detail-info-value">${val(info.net_m2)}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">Oda Sayısı</span>
+                            <span class="detail-info-value">${val(info.oda_sayisi)}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">Danışman</span>
+                            <span class="detail-info-value">
+                                <span class="detail-agent-avatar">${initials}</span>${info.danisman}
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                ${featuresHTML}
+            `;
+        }
+
+        load().catch(() => {
+            document.getElementById("detail-main").innerHTML = `
+                <div class="empty-state">
+                    <span class="empty-icon">◇</span>
+                    <p>İlan bulunamadı veya yüklenemedi.</p>
+                    <a href="/" class="btn-back" style="margin-top:1rem">← Ana Sayfa</a>
+                </div>`;
+        });
+    })();
+    </script>
+</body>
+</html>
