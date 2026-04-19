@@ -88,6 +88,20 @@ class AppCLITests(unittest.TestCase):
         self.assertIn("search_ms", keys)
         self.assertIn("stats_ms", keys)
 
+    def test_benchmark_max_price_validation(self):
+        code, out, err = self.run_main(
+            [
+                "benchmark",
+                "--db",
+                str(self.db_path),
+                "--bench-max-price",
+                "-1",
+            ]
+        )
+        self.assertEqual(code, 2)
+        self.assertIn("--bench-max-price negatif olamaz.", err)
+        self.assertEqual(out, "")
+
 
 if __name__ == "__main__":
     unittest.main()

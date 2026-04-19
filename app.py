@@ -287,6 +287,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    if not hasattr(args, "limit"):
+        raise AppError("--limit parametresi bulunamadı.")
     if args.limit <= 0:
         raise AppError("--limit pozitif bir sayı olmalıdır.")
     if args.limit > MAX_LIMIT:
@@ -313,6 +315,8 @@ def validate_args(args: argparse.Namespace) -> None:
         args.bench_district = args.bench_district.strip()
         if not args.bench_district:
             raise AppError("--bench-district boş veya sadece boşluk olamaz.")
+    if hasattr(args, "bench_max_price") and args.bench_max_price < 0:
+        raise AppError("--bench-max-price negatif olamaz.")
 
 
 def _render_output(
