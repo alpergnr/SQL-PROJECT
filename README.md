@@ -109,7 +109,7 @@ INNER JOIN Ekip K ON E.DanismanID = K.DanismanID;
 
 ---
 
-### Query 2: Budget and Region Filtering (WHERE, IN)
+### Query 2: Budget and Region Filtering `(WHERE, IN)`
 
 The goal is to retrieve apartments with a budget of 40,000 TL or less, specifically in the Şişli and Beyoğlu districts (İstiklal, Cihangir, Firuzağa, etc.).
 
