@@ -79,10 +79,10 @@ Ekip ──(1:N)──► Emlaklar
 | Table | Records | Description |
 |:---|:---:|:---|
 | Ekip | 2 | Agent and store owner |
-| Emlaklar | 5 | Real listings with IlanID 1000–1004 |
+| Emlaklar | 10 | Real listings with IlanID 1000–1009 |
 | Ozellik_Kategorileri | 3 | Interior Feature / Exterior Feature / Orientation |
-| Ozellikler | 33 | Full feature pool |
-| Emlak_Ozellikleri | 26 | Listing–feature mappings |
+| Ozellikler | 81 | Full feature pool |
+| Emlak_Ozellikleri | 246 | Listing–feature mappings |
 
 For the full ERD and column details → **[SCHEMA.md](./SCHEMA.md)**
 
