@@ -211,6 +211,67 @@ python3 app.py list --limit 5 --output json
 
 ---
 
+### 🌐 Web Application (`webapp.py`)
+
+A full-featured **Flask web application** with a premium Art Deco–inspired dark UI.
+
+```bash
+# Install dependencies
+python -m pip install flask
+
+# Start the web server
+python webapp.py
+
+# Open in browser → http://localhost:5000
+```
+
+#### Design
+
+- **Theme:** Dark obsidian (`#0a0a0f`) base with warm gold (`#c9a84c`) accents
+- **Typography:** Playfair Display (headings) + DM Sans (body)
+- **Animations:** Staggered card reveals, hover glow effects, gradient orb backgrounds
+- **Responsive:** Mobile-friendly navigation with hamburger toggle
+
+#### Features
+
+| View | Description |
+|:---|:---|
+| **İlanlar** | Browse all listings as cards — sort by price, m², or listing ID |
+| **Arama** | Advanced search with max price, district, feature, and limit filters |
+| **Danışmanlar** | Agent portfolio stats with animated progress bars |
+| **Performans** | One-click database query benchmark with timing results |
+
+#### REST API Endpoints
+
+| Endpoint | Description |
+|:---|:---|
+| `GET /api/listings?sort_by=&limit=` | Listings with sorting |
+| `GET /api/search?max_price=&district=&feature=&limit=` | Filtered search |
+| `GET /api/stats` | Agent portfolio statistics |
+| `GET /api/benchmark` | Query performance metrics |
+| `GET /api/meta` | Available filter options (districts, features) |
+
+#### Screenshots
+
+<details>
+<summary>📸 Click to expand screenshots</summary>
+
+**Listings View — İlanlar**
+
+![Listings View](docs/screenshots/listings.png)
+
+**Search View — Gelişmiş Arama**
+
+![Search View](docs/screenshots/search.png)
+
+**Benchmark View — Sorgu Performansı**
+
+![Benchmark View](docs/screenshots/benchmark.png)
+
+</details>
+
+---
+
 ## ✅ Quality, Testing, and CI
 
 ```bash
