@@ -25,6 +25,16 @@ This project was initiated to design a normalized and queryable relational datab
 
 ---
 
+## 🧭 Product Scope Decision (CLI-first)
+
+This repository is intentionally maintained as a **CLI-first data product** for SQLite workflows.
+
+- Primary interface: `app.py` command-line tool
+- UX baseline: consistent table/json/csv outputs, explicit empty-state messages, argument validation
+- Future UI path: a separate web/mobile UI can be built on top of the same SQL and CLI logic
+
+---
+
 ## 🎯 Why Is It Important?
 
 | Current Problem | Provided Solution |
@@ -191,6 +201,25 @@ python3 app.py search --max-price 40000 --district Beyoğlu --feature Asansör
 
 # Agent portfolio stats
 python3 app.py stats
+
+# Performance benchmark
+python3 app.py benchmark --output table
+
+# Machine-friendly output
+python3 app.py list --limit 5 --output json
 ```
 
 ---
+
+## ✅ Quality, Testing, and CI
+
+```bash
+# Lint + tests
+make ci
+
+# Run unit tests only
+make test
+```
+
+- CI workflow: `.github/workflows/ci.yml`
+- Contribution guide: `CONTRIBUTING.md`
