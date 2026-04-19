@@ -64,18 +64,6 @@ njoy-emlak-db/
 
 **5 tables** were designed targeting 3NF. Relationships between tables are managed with Foreign Keys; the many-to-many relationship between Emlaklar and Ozellikler is resolved through a separate junction table.
 
-```
-Ekip ──(1:N)──► Emlaklar
-                    │
-                   (N)
-                    ▼
-          Emlak_Ozellikleri   ← junction table (M:N)
-                    │
-                   (N)
-                    ▼
-             Ozellikler ──(N:1)──► Ozellik_Kategorileri
-```
-
 | Table | Records | Description |
 |:---|:---:|:---|
 | Ekip | 2 | Agent and store owner |
