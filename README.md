@@ -45,7 +45,7 @@ njoy-emlak-db/
 ├── SCHEMA.md                          ← ERD and table descriptions
 ├── njoy_veritabani.sql                ← Database creation + data script
 ├── njoyemlak.db                       ← Compiled SQLite database
-└── Teknik_Rapor.pdf                   ← Technical report
+└── Technical_Report.pdf               ← Technical report
 ```
 
 ---
