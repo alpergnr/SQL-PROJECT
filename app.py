@@ -54,7 +54,9 @@ class NjoyRepository:
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self._db_path))
         conn.row_factory = sqlite3.Row
+        # Keep relational integrity checks active for every connection.
         conn.execute("PRAGMA foreign_keys = ON;")
+        # Reduce transient lock errors during concurrent reads/writes.
         conn.execute("PRAGMA busy_timeout = 3000;")
         return conn
 
@@ -154,14 +156,16 @@ class NjoyRepository:
             for row in rows
         ]
 
-    def benchmark(self, limit: int = 20) -> dict[str, float]:
+    def benchmark(
+        self, limit: int = 20, max_price: float = 50000, district: str = "Beyoğlu"
+    ) -> dict[str, float]:
         metrics: dict[str, float] = {}
         start = time.perf_counter()
         self.list_listings(limit=limit, sort_by="fiyat_desc")
         metrics["list_ms"] = (time.perf_counter() - start) * 1000
 
         start = time.perf_counter()
-        self.search(max_price=50000, districts=["Beyoğlu"], feature=None, limit=limit)
+        self.search(max_price=max_price, districts=[district], feature=None, limit=limit)
         metrics["search_ms"] = (time.perf_counter() - start) * 1000
 
         start = time.perf_counter()
@@ -243,6 +247,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     benchmark_cmd = sub.add_parser("benchmark", help="Temel sorgu performans ölçümü")
     _add_common_filters(benchmark_cmd)
+    benchmark_cmd.add_argument(
+        "--bench-max-price",
+        type=float,
+        default=50000,
+        help="Benchmark arama adımı için maksimum fiyat",
+    )
+    benchmark_cmd.add_argument(
+        "--bench-district",
+        default="Beyoğlu",
+        help="Benchmark arama adımı için ilçe",
+    )
 
     return parser
 
@@ -257,13 +272,17 @@ def validate_args(args: argparse.Namespace) -> None:
     if hasattr(args, "districts") and args.districts is not None:
         districts = [d.strip() for d in args.districts if d and d.strip()]
         if len(districts) != len(args.districts):
-            raise AppError("--district boş değer içeremez.")
+            raise AppError("--district boş veya sadece boşluk olamaz.")
         args.districts = list(dict.fromkeys(districts))
     if hasattr(args, "feature") and args.feature is not None:
         feature = args.feature.strip()
         if not feature:
             raise AppError("--feature boş olamaz.")
         args.feature = feature
+    if hasattr(args, "bench_district"):
+        args.bench_district = args.bench_district.strip()
+        if not args.bench_district:
+            raise AppError("--bench-district boş veya sadece boşluk olamaz.")
 
 
 def _render_output(
@@ -343,7 +362,11 @@ def cmd_stats(repo: NjoyRepository, _args: argparse.Namespace) -> str:
 
 
 def cmd_benchmark(repo: NjoyRepository, args: argparse.Namespace) -> str:
-    metrics = repo.benchmark(limit=args.limit)
+    metrics = repo.benchmark(
+        limit=args.limit,
+        max_price=args.bench_max_price,
+        district=args.bench_district.strip(),
+    )
     rows = [(name, f"{value:.2f}") for name, value in metrics.items()]
     return _render_output(
         headers=["Sorgu", "Süre (ms)"],
