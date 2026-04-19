@@ -365,7 +365,7 @@ def cmd_benchmark(repo: NjoyRepository, args: argparse.Namespace) -> str:
     metrics = repo.benchmark(
         limit=args.limit,
         max_price=args.bench_max_price,
-        district=args.bench_district.strip(),
+        district=args.bench_district,
     )
     rows = [(name, f"{value:.2f}") for name, value in metrics.items()]
     return _render_output(

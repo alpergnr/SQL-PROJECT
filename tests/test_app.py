@@ -18,13 +18,17 @@ class AppCLITests(unittest.TestCase):
     def setUpClass(cls):
         cls._tmpdir = tempfile.TemporaryDirectory()
         cls.db_path = Path(cls._tmpdir.name) / "test.db"
-        with sqlite3.connect(str(cls.db_path)) as conn:
-            script = SQL_SCRIPT_PATH.read_text(encoding="utf-8")
-            conn.executescript(script)
 
     @classmethod
     def tearDownClass(cls):
         cls._tmpdir.cleanup()
+
+    def setUp(self):
+        if self.db_path.exists():
+            self.db_path.unlink()
+        with sqlite3.connect(str(self.db_path)) as conn:
+            script = SQL_SCRIPT_PATH.read_text(encoding="utf-8")
+            conn.executescript(script)
 
     def run_main(self, argv):
         out = io.StringIO()
