@@ -7,7 +7,8 @@
 CREATE TABLE Ekip (
     DanismanID INTEGER PRIMARY KEY AUTOINCREMENT,
     AdSoyad VARCHAR(100) NOT NULL,
-    Unvan VARCHAR(50)
+    Unvan VARCHAR(50),
+    Telefon VARCHAR(20)
 );
 
 CREATE TABLE Emlaklar (
@@ -49,9 +50,9 @@ CREATE TABLE Emlak_Ozellikleri (
 -- 2. ÖRNEK VERİLERİ EKLEME (INSERT İşlemleri)
 
 -- Ekip (Danışmanlar) Verileri
-INSERT INTO Ekip (AdSoyad, Unvan) VALUES 
-('Selim Gürses', 'Danışman'),
-('Fatih Işık', 'Mağaza Sahibi');
+INSERT INTO Ekip (AdSoyad, Unvan, Telefon) VALUES
+('Selim Gürses', 'Danışman', '0 (531) 700 34 74'),
+('Fatih Işık', 'Mağaza Sahibi', '0 (532) 495 16 50');
 
 -- Kategori Verileri
 INSERT INTO Ozellik_Kategorileri (KategoriAdi) VALUES 
