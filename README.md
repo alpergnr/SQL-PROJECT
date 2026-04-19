@@ -148,7 +148,7 @@ GROUP BY K.AdSoyad;
 
 ### Query 4 — Feature-Based Filtering `(4-Table JOIN)`
 
-Retrieves listings with elevator or air conditioning along with the feature category. This query, which chains four tables via JOIN, demonstrates the practical use of the junction table.
+Retrieves listings with heat insulation or air conditioning along with the feature category. This query, which chains four tables via JOIN, demonstrates the practical use of the junction table.
 
 ```sql
 SELECT DISTINCT E.Baslik, E.Fiyat,
@@ -157,7 +157,7 @@ FROM   Emlaklar E
 INNER JOIN Emlak_Ozellikleri EO     ON E.IlanID      = EO.IlanID
 INNER JOIN Ozellikler Oz            ON EO.OzellikID  = Oz.OzellikID
 INNER JOIN Ozellik_Kategorileri Kat ON Oz.KategoriID = Kat.KategoriID
-WHERE  Oz.OzellikAdi IN ('Asansör', 'Klima');
+WHERE  Oz.OzellikAdi IN ('Isı Yalıtımı', 'Klima');
 ```
 
 ---
@@ -197,7 +197,7 @@ python3 app.py --help
 python3 app.py list --limit 10 --sort-by fiyat_desc
 
 # Filtered search
-python3 app.py search --max-price 40000 --district Beyoğlu --feature Asansör
+python3 app.py search --max-price 40000 --district Beyoğlu --feature Klima
 
 # Agent portfolio stats
 python3 app.py stats
