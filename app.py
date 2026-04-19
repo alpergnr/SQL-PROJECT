@@ -2,14 +2,22 @@
 from __future__ import annotations
 
 import argparse
+import csv
+import json
+import logging
 import sqlite3
 import sys
+import time
 from dataclasses import dataclass
+from io import StringIO
 from pathlib import Path
 from typing import Iterable, Sequence
 
 
 DEFAULT_DB_PATH = Path(__file__).with_name("njoyemlak.db")
+MAX_LIMIT = 200
+
+logger = logging.getLogger("njoy_cli")
 
 
 class AppError(Exception):
@@ -47,7 +55,17 @@ class NjoyRepository:
         conn = sqlite3.connect(str(self._db_path))
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
+        conn.execute("PRAGMA busy_timeout = 3000;")
         return conn
+
+    def _timed_fetchall(
+        self, conn: sqlite3.Connection, query: str, params: Sequence[object], op_name: str
+    ) -> list[sqlite3.Row]:
+        start = time.perf_counter()
+        rows = conn.execute(query, params).fetchall()
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        logger.info("%s completed in %.2f ms", op_name, elapsed_ms)
+        return rows
 
     def list_listings(self, limit: int, sort_by: str) -> list[Listing]:
         sort_map = {
@@ -69,7 +87,7 @@ class NjoyRepository:
             LIMIT ?
         """
         with self._connect() as conn:
-            rows = conn.execute(query, (limit,)).fetchall()
+            rows = self._timed_fetchall(conn, query, (limit,), "list_listings")
         return [self._row_to_listing(row) for row in rows]
 
     def search(
@@ -113,7 +131,7 @@ class NjoyRepository:
         """
         params.append(limit)
         with self._connect() as conn:
-            rows = conn.execute(query, params).fetchall()
+            rows = self._timed_fetchall(conn, query, params, "search")
         return [self._row_to_listing(row) for row in rows]
 
     def agent_portfolios(self) -> list[AgentPortfolio]:
@@ -126,7 +144,7 @@ class NjoyRepository:
             ORDER BY ToplamPortfoy DESC
         """
         with self._connect() as conn:
-            rows = conn.execute(query).fetchall()
+            rows = self._timed_fetchall(conn, query, (), "agent_portfolios")
         return [
             AgentPortfolio(
                 ad_soyad=row["AdSoyad"],
@@ -135,6 +153,21 @@ class NjoyRepository:
             )
             for row in rows
         ]
+
+    def benchmark(self, limit: int = 20) -> dict[str, float]:
+        metrics: dict[str, float] = {}
+        start = time.perf_counter()
+        self.list_listings(limit=limit, sort_by="fiyat_desc")
+        metrics["list_ms"] = (time.perf_counter() - start) * 1000
+
+        start = time.perf_counter()
+        self.search(max_price=50000, districts=["Beyoğlu"], feature=None, limit=limit)
+        metrics["search_ms"] = (time.perf_counter() - start) * 1000
+
+        start = time.perf_counter()
+        self.agent_portfolios()
+        metrics["stats_ms"] = (time.perf_counter() - start) * 1000
+        return metrics
 
     @staticmethod
     def _row_to_listing(row: sqlite3.Row) -> Listing:
@@ -171,6 +204,12 @@ def format_table(headers: Sequence[str], rows: Iterable[Sequence[object]]) -> st
 def _add_common_filters(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--db", type=Path, default=DEFAULT_DB_PATH, help="SQLite db yolu")
     parser.add_argument("--limit", type=int, default=20, help="Maksimum kayıt sayısı")
+    parser.add_argument(
+        "--output",
+        choices=["table", "json", "csv"],
+        default="table",
+        help="Çıktı formatı",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -202,32 +241,70 @@ def build_parser() -> argparse.ArgumentParser:
     stats_cmd = sub.add_parser("stats", help="Danışman portföy istatistikleri")
     _add_common_filters(stats_cmd)
 
+    benchmark_cmd = sub.add_parser("benchmark", help="Temel sorgu performans ölçümü")
+    _add_common_filters(benchmark_cmd)
+
     return parser
 
 
 def validate_args(args: argparse.Namespace) -> None:
     if args.limit <= 0:
         raise AppError("--limit pozitif bir sayı olmalıdır.")
+    if args.limit > MAX_LIMIT:
+        raise AppError(f"--limit en fazla {MAX_LIMIT} olabilir.")
     if getattr(args, "max_price", None) is not None and args.max_price < 0:
         raise AppError("--max-price negatif olamaz.")
+    if hasattr(args, "districts") and args.districts is not None:
+        districts = [d.strip() for d in args.districts if d and d.strip()]
+        if len(districts) != len(args.districts):
+            raise AppError("--district boş değer içeremez.")
+        args.districts = list(dict.fromkeys(districts))
+    if hasattr(args, "feature") and args.feature is not None:
+        feature = args.feature.strip()
+        if not feature:
+            raise AppError("--feature boş olamaz.")
+        args.feature = feature
+
+
+def _render_output(
+    headers: Sequence[str], rows: list[Sequence[object]], output: str, empty_message: str
+) -> str:
+    if not rows:
+        return empty_message
+    if output == "table":
+        return format_table(headers, rows)
+    if output == "json":
+        payload = [dict(zip(headers, row)) for row in rows]
+        return json.dumps(payload, ensure_ascii=False, indent=2)
+    if output == "csv":
+        out = StringIO()
+        writer = csv.writer(out)
+        writer.writerow(headers)
+        writer.writerows(rows)
+        return out.getvalue().strip()
+    raise AppError(f"Geçersiz çıktı formatı: {output}")
 
 
 def cmd_list(repo: NjoyRepository, args: argparse.Namespace) -> str:
     items = repo.list_listings(limit=args.limit, sort_by=args.sort_by)
-    return format_table(
-        headers=["IlanID", "Başlık", "Fiyat", "İlçe", "Mahalle", "Tip", "Danışman"],
-        rows=[
-            (
-                i.ilan_id,
-                i.baslik,
-                f"{i.fiyat:,.0f}",
-                i.ilce,
-                i.mahalle,
-                i.emlak_tipi,
-                i.danisman,
-            )
-            for i in items
-        ],
+    headers = ["IlanID", "Başlık", "Fiyat", "İlçe", "Mahalle", "Tip", "Danışman"]
+    rows = [
+        (
+            i.ilan_id,
+            i.baslik,
+            f"{i.fiyat:,.0f}",
+            i.ilce,
+            i.mahalle,
+            i.emlak_tipi,
+            i.danisman,
+        )
+        for i in items
+    ]
+    return _render_output(
+        headers=headers,
+        rows=rows,
+        output=args.output,
+        empty_message="Kayıt bulunamadı.",
     )
 
 
@@ -238,26 +315,46 @@ def cmd_search(repo: NjoyRepository, args: argparse.Namespace) -> str:
         feature=args.feature,
         limit=args.limit,
     )
-    return format_table(
-        headers=["IlanID", "Başlık", "Fiyat", "İlçe", "Mahalle", "Tip"],
-        rows=[
-            (i.ilan_id, i.baslik, f"{i.fiyat:,.0f}", i.ilce, i.mahalle, i.emlak_tipi)
-            for i in items
-        ],
+    headers = ["IlanID", "Başlık", "Fiyat", "İlçe", "Mahalle", "Tip"]
+    rows = [
+        (i.ilan_id, i.baslik, f"{i.fiyat:,.0f}", i.ilce, i.mahalle, i.emlak_tipi)
+        for i in items
+    ]
+    return _render_output(
+        headers=headers,
+        rows=rows,
+        output=args.output,
+        empty_message="Filtrelere uygun kayıt bulunamadı.",
     )
 
 
 def cmd_stats(repo: NjoyRepository, _args: argparse.Namespace) -> str:
     stats = repo.agent_portfolios()
-    return format_table(
-        headers=["Danışman", "İlan Sayısı", "Toplam Portföy (TL)"],
-        rows=[
-            (s.ad_soyad, s.toplam_ilan, f"{(s.toplam_portfoy or 0):,.0f}") for s in stats
-        ],
+    headers = ["Danışman", "İlan Sayısı", "Toplam Portföy (TL)"]
+    rows = [
+        (s.ad_soyad, s.toplam_ilan, f"{(s.toplam_portfoy or 0):,.0f}") for s in stats
+    ]
+    return _render_output(
+        headers=headers,
+        rows=rows,
+        output=_args.output,
+        empty_message="İstatistik bulunamadı.",
+    )
+
+
+def cmd_benchmark(repo: NjoyRepository, args: argparse.Namespace) -> str:
+    metrics = repo.benchmark(limit=args.limit)
+    rows = [(name, f"{value:.2f}") for name, value in metrics.items()]
+    return _render_output(
+        headers=["Sorgu", "Süre (ms)"],
+        rows=rows,
+        output=args.output,
+        empty_message="Benchmark verisi bulunamadı.",
     )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -268,6 +365,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "list": cmd_list,
             "search": cmd_search,
             "stats": cmd_stats,
+            "benchmark": cmd_benchmark,
         }
         handler = handlers.get(args.command)
         if handler is None:
