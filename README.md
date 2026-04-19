@@ -177,4 +177,20 @@ sqlite3 njoyemlak.db
 sqlite3 new.db < njoy_veritabani.sql
 ```
 
+### Python CLI (`app.py`)
+
+```bash
+# Help
+python3 app.py --help
+
+# List listings
+python3 app.py list --limit 10 --sort-by fiyat_desc
+
+# Filtered search
+python3 app.py search --max-price 40000 --district Beyoğlu --feature Asansör
+
+# Agent portfolio stats
+python3 app.py stats
+```
+
 ---
