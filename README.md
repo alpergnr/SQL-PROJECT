@@ -21,7 +21,7 @@ As their portfolios grow, small and medium-sized real estate offices struggle to
 
 This project was initiated to design a normalized and queryable relational database based on the **actual portfolio** of the Njoy Emlak office to solve these problems.
 
-> ⚠️ **Data Collection Method:** All listing data in the database was **manually collected (data scraping)** from **njoyemlak.com**. 5 active listings along with all their interior features, exterior features, and orientation details were entered into the system. No artificial or fabricated data was used.
+> ⚠️ **Data Collection Method:** All listing data in the database was **manually collected (data scraping)** from **njoyemlak.com**. 10 active listings along with all their interior features, exterior features, and orientation details were entered into the system. No artificial or fabricated data was used.
 
 ---
 
