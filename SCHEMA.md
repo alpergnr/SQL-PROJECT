@@ -7,48 +7,7 @@
 
 ## Entity Relationship Diagram
 
-```
-┌──────────────┐        ┌────────────────────────────────────────┐
-│     Ekip     │  1  N  │             Emlaklar                   │
-│──────────────│────────│────────────────────────────────────────│
-│ DanismanID   │◄───────│ IlanID        (PK)                     │
-│ AdSoyad      │        │ DanismanID    (FK → Ekip)              │
-│ Unvan        │        │ Baslik, Fiyat                          │
-│ Telefon      │        │ Il, Ilce, Mahalle                      │
-└──────────────┘        │ EmlakTipi                              │
-                        │ BrutM2, NetM2, OdaSayisi               │
-                        └────────────────┬───────────────────────┘
-                                         │ N
-                                         ▼
-                        ┌────────────────────────────────────────┐
-                        │        Emlak_Ozellikleri               │
-                        │      (Bridge / Junction Table)         │
-                        │────────────────────────────────────────│
-                        │ IlanID     (FK → Emlaklar)             │
-                        │ OzellikID  (FK → Ozellikler)           │
-                        │ [Composite PK: IlanID + OzellikID]     │
-                        └────────────────┬───────────────────────┘
-                                         │ N
-                                         ▼
-                        ┌────────────────────────────────────────┐
-                        │          Ozellikler                    │
-                        │────────────────────────────────────────│
-                        │ OzellikID  (PK)                        │
-                        │ KategoriID (FK → Ozellik_Kategorileri) │
-                        │ OzellikAdi                             │
-                        └────────────────┬───────────────────────┘
-                                         │ N
-                                         │ 1
-                        ┌────────────────▼───────────────────────┐
-                        │       Ozellik_Kategorileri             │
-                        │────────────────────────────────────────│
-                        │ KategoriID  (PK)                       │
-                        │ KategoriAdi                            │
-                        │   → 'İç Özellik'                       │
-                        │   → 'Dış Özellik'                      │
-                        │   → 'Cephe'                            │
-                        └────────────────────────────────────────┘
-```
+![Schema ERD](docs/screenshots/schema_erd.png)
 
 ---
 
@@ -62,7 +21,7 @@ Stores information about agents and store owners in the real estate office.
 | `DanismanID` | INTEGER | PK, AUTOINCREMENT | Unique identifier for the agent |
 | `AdSoyad` | VARCHAR(100) | NOT NULL | Full name of the staff member |
 | `Unvan` | VARCHAR(50) | — | Agent / Store Owner, etc. |
-| `Telefon` | VARCHAR(30) | — | Contact number |
+| `Telefon` | VARCHAR(20) | — | Contact number |
 
 ---
 
@@ -71,7 +30,7 @@ Stores core data of rental and for-sale property listings in the portfolio.
 
 | Column | Type | Constraint | Description |
 |---|---|---|---|
-| `IlanID` | INTEGER | PRIMARY KEY | Unique listing number (1000–1004) |
+| `IlanID` | INTEGER | PRIMARY KEY | Unique listing number (1000–1009) |
 | `DanismanID` | INT | FK → Ekip | Reference to the associated agent |
 | `Baslik` | VARCHAR(255) | NOT NULL | Listing title |
 | `Fiyat` | DECIMAL(18,2) | NOT NULL | Monthly rent / sale price (TL) |
@@ -98,7 +57,7 @@ Main headings that provide grouping for features.
 | ID | Category Name | Example Features |
 |---|---|---|
 | 1 | İç Özellik (Interior Feature) | ADSL, Air Conditioning, Steel Door, Terrace, Double Glazing... |
-| 2 | Dış Özellik (Exterior Feature) | Elevator, Security, Parking, Thermal Insulation... |
+| 2 | Dış Özellik (Exterior Feature) | Security Camera, Thermal Insulation, Satellite, Generator... |
 | 3 | Cephe (Orientation) | East, West, South, North |
 
 ---
@@ -112,7 +71,7 @@ Contains the full feature pool linked to categories.
 | `KategoriID` | INT | FK → Ozellik_Kategorileri | The category it belongs to |
 | `OzellikAdi` | VARCHAR(100) | NOT NULL | Feature text |
 
-**Total:** 33 features — 19 Interior Features · 10 Exterior Features · 4 Orientations
+**Total:** 81 features — 53 Interior Features · 24 Exterior Features · 4 Orientations
 
 ---
 
@@ -134,10 +93,10 @@ Resolves the **many-to-many (M:N)** relationship between Emlaklar and Ozellikler
 | Table | Record Count | Note |
 |---|---|---|
 | Ekip | 2 | 1 Agent, 1 Store Owner |
-| Emlaklar | 5 | IlanID: 1000–1004 |
+| Emlaklar | 10 | IlanID: 1000–1009 |
 | Ozellik_Kategorileri | 3 | Interior / Exterior / Orientation |
-| Ozellikler | 33 | Full feature pool |
-| Emlak_Ozellikleri | 26 | Listing–feature mappings |
+| Ozellikler | 81 | Full feature pool |
+| Emlak_Ozellikleri | 246 | Listing–feature mappings |
 
 ---
 
