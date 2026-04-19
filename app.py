@@ -70,24 +70,43 @@ class NjoyRepository:
         return rows
 
     def list_listings(self, limit: int, sort_by: str) -> list[Listing]:
-        sort_map = {
-            "fiyat_desc": "E.Fiyat DESC",
-            "fiyat_asc": "E.Fiyat ASC",
-            "m2_desc": "E.NetM2 DESC",
-            "ilanid_asc": "E.IlanID ASC",
+        query_map = {
+            "fiyat_desc": """
+                SELECT E.IlanID, E.Baslik, E.Fiyat, E.İlce, E.Mahalle, E.EmlakTipi,
+                       E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
+                FROM Emlaklar E
+                INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+                ORDER BY E.Fiyat DESC
+                LIMIT ?
+            """,
+            "fiyat_asc": """
+                SELECT E.IlanID, E.Baslik, E.Fiyat, E.İlce, E.Mahalle, E.EmlakTipi,
+                       E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
+                FROM Emlaklar E
+                INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+                ORDER BY E.Fiyat ASC
+                LIMIT ?
+            """,
+            "m2_desc": """
+                SELECT E.IlanID, E.Baslik, E.Fiyat, E.İlce, E.Mahalle, E.EmlakTipi,
+                       E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
+                FROM Emlaklar E
+                INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+                ORDER BY E.NetM2 DESC
+                LIMIT ?
+            """,
+            "ilanid_asc": """
+                SELECT E.IlanID, E.Baslik, E.Fiyat, E.İlce, E.Mahalle, E.EmlakTipi,
+                       E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
+                FROM Emlaklar E
+                INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+                ORDER BY E.IlanID ASC
+                LIMIT ?
+            """,
         }
-        order_clause = sort_map.get(sort_by)
-        if order_clause is None:
+        query = query_map.get(sort_by)
+        if query is None:
             raise AppError(f"Geçersiz sıralama: {sort_by}")
-
-        query = f"""
-            SELECT E.IlanID, E.Baslik, E.Fiyat, E.İlce, E.Mahalle, E.EmlakTipi,
-                   E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
-            FROM Emlaklar E
-            INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
-            ORDER BY {order_clause}
-            LIMIT ?
-        """
         with self._connect() as conn:
             rows = self._timed_fetchall(conn, query, (limit,), "list_listings")
         return [self._row_to_listing(row) for row in rows]
@@ -109,7 +128,7 @@ class NjoyRepository:
 
         if districts:
             placeholders = ", ".join("?" for _ in districts)
-            where_clauses.append(f"E.İlce IN ({placeholders})")
+            where_clauses.append("E.İlce IN (" + placeholders + ")")
             params.extend(districts)
 
         if feature:
@@ -120,17 +139,22 @@ class NjoyRepository:
             where_clauses.append("O.OzellikAdi = ?")
             params.append(feature)
 
-        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
-        query = f"""
+        where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+        query_parts = [
+            """
             SELECT DISTINCT E.IlanID, E.Baslik, E.Fiyat, E.İlce, E.Mahalle, E.EmlakTipi,
                             E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
             FROM Emlaklar E
             INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
-            {joins}
-            {where_sql}
-            ORDER BY E.Fiyat DESC
-            LIMIT ?
-        """
+            """.strip()
+        ]
+        if joins:
+            query_parts.append(joins.strip())
+        if where_sql:
+            query_parts.append(where_sql)
+        query_parts.append("ORDER BY E.Fiyat DESC")
+        query_parts.append("LIMIT ?")
+        query = "\n".join(query_parts)
         params.append(limit)
         with self._connect() as conn:
             rows = self._timed_fetchall(conn, query, params, "search")
@@ -272,7 +296,7 @@ def validate_args(args: argparse.Namespace) -> None:
     if hasattr(args, "districts") and args.districts is not None:
         districts = [d.strip() for d in args.districts if d and d.strip()]
         if len(districts) != len(args.districts):
-            raise AppError("--district boş veya sadece boşluk olamaz.")
+            raise AppError("Tüm --district değerleri geçerli olmalıdır (boş olamaz).")
         args.districts = list(dict.fromkeys(districts))
     if hasattr(args, "feature") and args.feature is not None:
         feature = args.feature.strip()
