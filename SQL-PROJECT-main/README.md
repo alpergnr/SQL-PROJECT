@@ -1,0 +1,319 @@
+# 🏢 Njoy Emlak — Relational Database Project
+
+> 📍 Real data source: **[njoyemlak.com](https://njoy.sahibinden.com/)** — An SQLite database designed based on the portfolio of an active real estate office in Istanbul.
+
+---
+
+## 👥 Team Members (Team - 8)
+
+| | | |
+|:---|:---|:---|
+| Altay Yeles | Alper Güner | Mustafa Ulaş Karaaslan |
+| Mehmet Can Öztürk | Emre Aslan | 
+
+---
+
+## 📌 Project Idea
+
+This project was created as a **solution to a real-world problem**. Our team member **Alper Güner**'s uncle's actively operating real estate company **[Njoy Emlak](https://njoy.sahibinden.com/)** is the direct inspiration and data source for this project.
+
+As their portfolios grow, small and medium-sized real estate offices struggle to manage listing, agent, and feature data effectively. Dependency on scattered Excel files and third-party platforms leads to critical issues such as **data redundancy**, **update anomalies**, and **insufficient reporting**.
+
+This project was initiated to design a normalized and queryable relational database based on the **actual portfolio** of the Njoy Emlak office to solve these problems.
+
+> ⚠️ **Data Collection Method:** All listing data in the database was **manually collected (data scraping)** from **njoyemlak.com**. 10 active listings along with all their interior features, exterior features, and orientation details were entered into the system. No artificial or fabricated data was used.
+
+---
+
+## 🧭 Product Scope Decision (CLI-first)
+
+This repository is intentionally maintained as a **CLI-first data product** for SQLite workflows.
+
+- Primary interface: `app.py` command-line tool
+- UX baseline: consistent table/json/csv outputs, explicit empty-state messages, argument validation
+- Future UI path: a separate web/mobile UI can be built on top of the same SQL and CLI logic
+
+---
+
+## 🎯 Why Is It Important?
+
+| Current Problem | Provided Solution |
+|:---|:---|
+| Scattered listing management | Single centralized, normalized database |
+| Data breaks when agents change | Referential integrity via Foreign Keys |
+| No feature-based search capability | Junction table + chained JOINs |
+| Portfolio performance cannot be measured | GROUP BY + SUM + COUNT analyses |
+| Price per m² cannot be calculated | Instant calculation with arithmetic operators |
+
+---
+
+## 📁 Repository Structure
+
+```
+njoy-emlak-db/
+├── README.md                          ← This file
+├── SCHEMA.md                          ← ERD and table descriptions
+├── njoy_veritabani.sql                ← Database creation + data script
+├── njoyemlak.db                       ← Compiled SQLite database
+└── Technical_Report.pdf               ← Technical report
+```
+
+---
+
+## 🗄️ Schema Overview
+
+**11 tables** were designed targeting 3NF plus auditability and customer workflows. Relationships between tables are managed with Foreign Keys; the many-to-many relationship between Emlaklar and Ozellikler is resolved through a separate junction table, admin changes are recorded in audit log tables, and customers can save listings, ask questions, and receive notifications.
+
+| Table | Records | Description |
+|:---|:---:|:---|
+| Ekip | 2 | Agent and store owner |
+| Emlaklar | 10 | Real listings with IlanID 1000–1009 |
+| Ozellik_Kategorileri | 3 | Interior Feature / Exterior Feature / Orientation |
+| Ozellikler | 81 | Full feature pool |
+| Emlak_Ozellikleri | 246 | Listing–feature mappings |
+| Fiyat_Degisim_Log | 0+ | Trigger-generated price change audit records |
+| Ilan_Degisim_Log | 0+ | Admin listing create/update history |
+| Kullanicilar | 0+ | Registered customer accounts |
+| Kaydedilen_Ilanlar | 0+ | Customer saved listings |
+| Musteri_Sorulari | 0+ | Customer questions and admin answers |
+| Bildirimler | 0+ | Customer message and listing-change notifications |
+
+For the full ERD and column details → **[SCHEMA.md](./SCHEMA.md)**
+
+---
+
+## ⚙️ Implemented SQL Features
+
+| # | Feature | Purpose |
+|:---:|:---|:---|
+| 1 | `INNER JOIN` / `LEFT JOIN` | Table joins; agent–listing matching |
+| 2 | `WHERE` + `IN` / `BETWEEN` | Region, price range, and multi-criteria filtering |
+| 3 | `GROUP BY` + `HAVING` | Agent-based portfolio grouping and filtering |
+| 4 | `COUNT` / `SUM` / `AVG` | Total listings, portfolio value, average price per m² |
+| 5 | `ORDER BY` | Sorting by price or square meters |
+| 6 | `VIEW` | Reusable listing, portfolio, ranking, pivot, and audit views |
+| 7 | `CTE` | Region-level price analysis in `v_bolge_fiyat_analizi` |
+| 8 | `INDEX` + `EXPLAIN` | Query acceleration on price, district, agent, and feature columns |
+| 9 | Window Functions | Listing and agent rankings with `RANK()` / `ROW_NUMBER()` |
+| 10 | Pivot | Room-count pivot with `CASE WHEN` conditional aggregation |
+| 11 | Trigger + Transaction | Price update audit via `trg_emlaklar_fiyat_audit` |
+| 12 | Backup | SQLite backup command through the CLI |
+
+---
+
+## 🔍 Example Queries
+
+### Query 1 — General Listing List `(INNER JOIN)`
+
+Lists all active listings with the responsible agent's name and contact information.
+
+```sql
+SELECT E.Baslik, E.Fiyat, E.İlce, E.EmlakTipi,
+       K.AdSoyad AS Danisman_Adi,
+       K.Telefon
+FROM   Emlaklar E
+INNER JOIN Ekip K ON E.DanismanID = K.DanismanID;
+```
+
+---
+
+### Query 2: Budget and Region Filtering `(WHERE, IN)`
+
+The goal is to retrieve apartments with a budget of 40,000 TL or less, specifically in the Şişli and Beyoğlu districts (İstiklal, Cihangir, Firuzağa, etc.).
+
+```sql
+SELECT Baslik, Fiyat, İlce, Mahalle 
+FROM Emlaklar 
+WHERE Fiyat <= 40000 AND İlce IN ('Şişli', 'Beyoğlu')
+ORDER BY Fiyat DESC;
+```
+---
+
+### Query 3 — Staff Portfolio Analysis `(GROUP BY + SUM + COUNT)`
+
+Calculates the number of listings managed by each agent and the total portfolio value (TL). Thanks to LEFT JOIN, agents with no listings yet are also included in the list.
+
+```sql
+SELECT K.AdSoyad,
+       COUNT(E.IlanID) AS ToplamIlanSayisi,
+       SUM(E.Fiyat)    AS ToplamPortfoyDegeri
+FROM   Ekip K
+LEFT JOIN Emlaklar E ON K.DanismanID = E.DanismanID
+GROUP BY K.AdSoyad;
+```
+
+---
+
+### Query 4 — Feature-Based Filtering `(4-Table JOIN)`
+
+Retrieves listings with heat insulation or air conditioning along with the feature category. This query, which chains four tables via JOIN, demonstrates the practical use of the junction table.
+
+```sql
+SELECT DISTINCT E.Baslik, E.Fiyat,
+                Oz.OzellikAdi, Kat.KategoriAdi
+FROM   Emlaklar E
+INNER JOIN Emlak_Ozellikleri EO     ON E.IlanID      = EO.IlanID
+INNER JOIN Ozellikler Oz            ON EO.OzellikID  = Oz.OzellikID
+INNER JOIN Ozellik_Kategorileri Kat ON Oz.KategoriID = Kat.KategoriID
+WHERE  Oz.OzellikAdi IN ('Isı Yalıtımı', 'Klima');
+```
+
+---
+
+### Query 5 — Rent Cost per m² `(Arithmetic)`
+
+Calculates the monthly rent cost per gross and net square meter for each listing.
+
+```sql
+SELECT Baslik, Fiyat, BrutM2, NetM2,
+       ROUND(Fiyat / BrutM2, 0) AS BrutM2_Fiyati,
+       ROUND(Fiyat / NetM2, 0)  AS NetM2_Fiyati
+FROM   Emlaklar
+WHERE  BrutM2 > 0 AND NetM2 > 0
+ORDER BY NetM2_Fiyati DESC;
+```
+
+---
+
+## 🚀 Running
+
+```bash
+# Open the existing database
+sqlite3 njoyemlak.db
+
+# Create from scratch using the SQL script
+sqlite3 new.db < njoy_veritabani.sql
+```
+
+### Python CLI (`app.py`)
+
+```bash
+# Help
+python3 app.py --help
+
+# List listings
+python3 app.py list --limit 10 --sort-by fiyat_desc
+
+# Filtered search
+python3 app.py search --max-price 40000 --district Beyoğlu --feature Klima
+
+# Agent portfolio stats
+python3 app.py stats
+
+# Performance benchmark
+python3 app.py benchmark --output table
+
+# CTE, window function, and pivot analytics
+python3 app.py analytics --limit 5 --output table
+
+# Show whether the indexed search uses the composite index
+python3 app.py explain --explain-district Beyoğlu --explain-max-price 50000
+
+# Transactional price update with trigger-backed audit log
+python3 app.py update-price 1000 41000 --note "Final demo update"
+python3 app.py price-history --limit 10
+
+# SQLite backup
+python3 app.py backup --backup-path backups/njoyemlak_backup.db
+
+# Machine-friendly output
+python3 app.py list --limit 5 --output json
+```
+
+---
+
+### 🌐 Web Application (`webapp.py`)
+
+A full-featured **Flask web application** with a premium Art Deco–inspired dark UI.
+
+```bash
+# Install dependencies
+python -m pip install flask
+
+# Start the web server
+python webapp.py
+
+# Open in browser → http://localhost:5000
+
+# Customer login/register
+# http://localhost:5000/login
+# http://localhost:5000/register
+
+# Admin panel uses the same login page.
+# Enter the admin credentials in /login to open http://localhost:5000/admin.
+```
+
+#### Features
+
+| View | Description |
+|:---|:---|
+| **İlanlar** | Browse all listings as cards — sort by price, m², or listing ID |
+| **Arama** | Advanced search with max price, district, feature, and limit filters |
+| **Danışmanlar** | Agent portfolio stats with animated progress bars |
+| **Performans** | One-click database query benchmark with timing results |
+| **Analiz** | Region, price, room type, and agent portfolio analytics |
+| **İlan Geçmişi** | Listing add/update history from the admin panel |
+| **Admin Panel** | Login-protected listing create, listing update, flexible price update, and grouped feature selection workflows |
+| **Müşteri Paneli** | Customer registration/login, saved listings, questions, messages, and notifications |
+
+#### Screenshots
+
+<details>
+<summary>📸 Click to expand screenshots</summary>
+
+**Listings View — İlanlar**
+
+![Listings View](docs/screenshots/listings.png)
+
+**Search View — Gelişmiş Arama**
+
+![Search View](docs/screenshots/search.png)
+
+**Benchmark View — Sorgu Performansı**
+
+![Benchmark View](docs/screenshots/benchmark.png)
+
+</details>
+
+
+#### REST API Endpoints
+
+| Endpoint | Description |
+|:---|:---|
+| `GET /api/listings?sort_by=&limit=` | Listings with sorting |
+| `GET /api/search?max_price=&district=&feature=&limit=` | Filtered search |
+| `GET /api/stats` | Agent portfolio statistics |
+| `GET /api/benchmark` | Query performance metrics |
+| `GET /api/analytics?limit=` | CTE, window, pivot, and ranking analytics |
+| `GET /api/explain?max_price=&district=&limit=` | Indexed search query plan |
+| `GET /api/price-history?limit=` | Trigger-backed price audit history |
+| `GET /api/listing-history?limit=` | Admin listing create/update history |
+| `POST /api/update-price` | Transactional price update with audit trigger |
+| `GET /api/account/bootstrap` | Customer dashboard data |
+| `POST /api/account/save-listing` | Save a listing |
+| `DELETE /api/account/save-listing/<id>` | Remove a saved listing |
+| `POST /api/account/questions` | Send a question to admin |
+| `POST /api/account/notifications/read` | Mark customer notifications as read |
+| `GET /api/admin/bootstrap` | Admin panel bootstrap data |
+| `POST /api/admin/listings` | Create a listing |
+| `PUT /api/admin/listings/<id>` | Update listing fields |
+| `POST /api/admin/listings/<id>/price` | Update listing price |
+| `POST /api/admin/questions/<id>/answer` | Answer a customer question |
+| `GET /api/meta` | Available filter options (districts, features) |
+
+
+---
+
+## ✅ Quality, Testing, and CI
+
+```bash
+# Lint + tests
+make ci
+
+# Run unit tests only
+make test
+```
+
+- CI workflow: `.github/workflows/ci.yml`
+- Contribution guide: `CONTRIBUTING.md`
+- Unit tests cover 10 CLI workflows, including analytics, EXPLAIN, backup, and trigger-backed price updates.

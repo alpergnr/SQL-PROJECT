@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Müşteri Paneli — Njoy Emlak</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="grain-overlay" aria-hidden="true"></div>
+    <nav class="main-nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">◆</span>
+                <span class="brand-text">NJOY<span class="brand-accent">EMLAK</span></span>
+            </a>
+            <div class="admin-nav-actions">
+                <span class="admin-user">{{ user.AdSoyad }}</span>
+                <a href="/" class="btn-secondary">Site</a>
+                <a href="/logout" class="btn-secondary">Çıkış</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-main customer-main" id="customer-app">
+        <header class="section-header admin-header">
+            <div class="section-header-text">
+                <h1 class="section-title">Müşteri Paneli</h1>
+                <p class="section-desc">İlanları kaydedin, danışmana soru sorun ve cevapları takip edin.</p>
+            </div>
+        </header>
+
+        <section class="customer-summary" id="customer-summary">
+            <article class="stat-card">
+                <span class="stat-number" id="summary-saved">—</span>
+                <span class="stat-label-text">Kaydedilen İlan</span>
+            </article>
+            <article class="stat-card">
+                <span class="stat-number" id="summary-questions">—</span>
+                <span class="stat-label-text">Soru</span>
+            </article>
+            <article class="stat-card">
+                <span class="stat-number" id="summary-unread">—</span>
+                <span class="stat-label-text">Yeni Bildirim</span>
+            </article>
+        </section>
+
+        <section class="admin-grid">
+            <article class="analysis-card">
+                <div class="analysis-card-head">
+                    <h2>Kaydedilen İlanlar</h2>
+                    <span>Favoriler</span>
+                </div>
+                <div id="saved-listings"></div>
+            </article>
+
+            <article class="analysis-card">
+                <div class="analysis-card-head">
+                    <h2>Soru Sor</h2>
+                    <span>Danışman</span>
+                </div>
+                <form class="admin-form" id="question-form">
+                    <div class="form-row">
+                        <label class="form-group admin-wide">
+                            <span class="form-label">İlan</span>
+                            <select class="form-input" name="ilan_id" id="question-listing"></select>
+                        </label>
+                        <label class="form-group admin-wide">
+                            <span class="form-label">Sorunuz</span>
+                            <textarea class="form-input textarea-input" name="question" rows="5" required></textarea>
+                        </label>
+                    </div>
+                    <button class="btn-primary" type="submit">Soruyu Gönder</button>
+                </form>
+            </article>
+        </section>
+
+        <section class="analysis-card admin-history-card">
+            <div class="analysis-card-head">
+                <h2>Tüm İlanlar</h2>
+                <span>Kaydet</span>
+            </div>
+            <div id="customer-listings"></div>
+        </section>
+
+        <section class="admin-grid admin-grid--lower">
+            <article class="analysis-card">
+                <div class="analysis-card-head">
+                    <h2>Mesaj Kutusu</h2>
+                    <span>Soru Cevap</span>
+                </div>
+                <div id="customer-messages"></div>
+            </article>
+
+            <article class="analysis-card">
+                <div class="analysis-card-head">
+                    <h2>Bildirimler</h2>
+                    <button class="btn-table-action" id="mark-notifications-read" type="button">Okundu Yap</button>
+                </div>
+                <div id="customer-notifications"></div>
+            </article>
+        </section>
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+    <script src="/static/account.js"></script>
+</body>
+</html>
