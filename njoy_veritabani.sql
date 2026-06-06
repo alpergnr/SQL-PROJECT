@@ -407,3 +407,260 @@ INSERT INTO Emlak_Ozellikleri (IlanID, OzellikID) VALUES
 -- Cephe
 (1009, 78), -- Doğu
 (1009, 79); -- Batı
+
+-- ==============================================================================
+-- 3. İLERİ SQL OBJELERİ (Week04 - Week14 kapsamı)
+-- ==============================================================================
+
+-- Week04: Indexes & Performance
+CREATE INDEX IF NOT EXISTS idx_emlaklar_fiyat
+ON Emlaklar(Fiyat);
+
+CREATE INDEX IF NOT EXISTS idx_emlaklar_ilce_fiyat
+ON Emlaklar(İlce, Fiyat);
+
+CREATE INDEX IF NOT EXISTS idx_emlaklar_danisman
+ON Emlaklar(DanismanID);
+
+CREATE INDEX IF NOT EXISTS idx_ozellikler_ad
+ON Ozellikler(OzellikAdi);
+
+CREATE INDEX IF NOT EXISTS idx_emlak_ozellikleri_ozellik
+ON Emlak_Ozellikleri(OzellikID, IlanID);
+
+-- Week05: Views
+CREATE VIEW IF NOT EXISTS v_ilan_detay AS
+SELECT
+    E.IlanID,
+    E.Baslik,
+    E.Fiyat,
+    E.İl,
+    E.İlce,
+    E.Mahalle,
+    E.EmlakTipi,
+    E.BrutM2,
+    E.NetM2,
+    E.OdaSayisi,
+    ROUND(E.Fiyat / NULLIF(E.BrutM2, 0), 2) AS BrutM2Fiyati,
+    ROUND(E.Fiyat / NULLIF(E.NetM2, 0), 2) AS NetM2Fiyati,
+    K.AdSoyad AS Danisman,
+    K.Unvan,
+    K.Telefon
+FROM Emlaklar E
+INNER JOIN Ekip K ON K.DanismanID = E.DanismanID;
+
+CREATE VIEW IF NOT EXISTS v_danisman_portfoy AS
+SELECT
+    K.DanismanID,
+    K.AdSoyad,
+    K.Unvan,
+    COUNT(E.IlanID) AS ToplamIlan,
+    COALESCE(SUM(E.Fiyat), 0) AS ToplamPortfoy,
+    ROUND(COALESCE(AVG(E.Fiyat), 0), 2) AS OrtalamaFiyat,
+    COALESCE(MIN(E.Fiyat), 0) AS EnDusukFiyat,
+    COALESCE(MAX(E.Fiyat), 0) AS EnYuksekFiyat
+FROM Ekip K
+LEFT JOIN Emlaklar E ON E.DanismanID = K.DanismanID
+GROUP BY K.DanismanID, K.AdSoyad, K.Unvan;
+
+CREATE VIEW IF NOT EXISTS v_ozellikli_ilanlar AS
+SELECT
+    E.IlanID,
+    E.Baslik,
+    E.Fiyat,
+    OK.KategoriAdi,
+    GROUP_CONCAT(O.OzellikAdi, ', ') AS Ozellikler
+FROM Emlaklar E
+INNER JOIN Emlak_Ozellikleri EO ON EO.IlanID = E.IlanID
+INNER JOIN Ozellikler O ON O.OzellikID = EO.OzellikID
+INNER JOIN Ozellik_Kategorileri OK ON OK.KategoriID = O.KategoriID
+GROUP BY E.IlanID, E.Baslik, E.Fiyat, OK.KategoriAdi;
+
+-- Week07: CTEs
+CREATE VIEW IF NOT EXISTS v_bolge_fiyat_analizi AS
+WITH BolgeOzet AS (
+    SELECT
+        İlce,
+        COUNT(*) AS IlanSayisi,
+        ROUND(AVG(Fiyat), 2) AS OrtalamaFiyat,
+        MIN(Fiyat) AS EnDusukFiyat,
+        MAX(Fiyat) AS EnYuksekFiyat,
+        ROUND(AVG(Fiyat / NULLIF(NetM2, 0)), 2) AS OrtalamaNetM2Fiyati
+    FROM Emlaklar
+    GROUP BY İlce
+)
+SELECT
+    İlce,
+    IlanSayisi,
+    OrtalamaFiyat,
+    EnDusukFiyat,
+    EnYuksekFiyat,
+    OrtalamaNetM2Fiyati,
+    ROUND(EnYuksekFiyat - EnDusukFiyat, 2) AS FiyatAraligi
+FROM BolgeOzet;
+
+-- Week09: Window Functions
+CREATE VIEW IF NOT EXISTS v_ilan_fiyat_siralamasi AS
+SELECT
+    IlanID,
+    Baslik,
+    Fiyat,
+    İlce,
+    Mahalle,
+    EmlakTipi,
+    Danisman,
+    RANK() OVER (PARTITION BY İlce ORDER BY Fiyat DESC) AS IlceIciFiyatSirasi,
+    ROW_NUMBER() OVER (ORDER BY Fiyat DESC) AS GenelFiyatSirasi
+FROM v_ilan_detay;
+
+CREATE VIEW IF NOT EXISTS v_danisman_portfoy_siralamasi AS
+SELECT
+    DanismanID,
+    AdSoyad,
+    ToplamIlan,
+    ToplamPortfoy,
+    OrtalamaFiyat,
+    RANK() OVER (ORDER BY ToplamPortfoy DESC) AS PortfoyDegeriSirasi,
+    RANK() OVER (ORDER BY ToplamIlan DESC) AS IlanSayisiSirasi
+FROM v_danisman_portfoy;
+
+-- Week09: Pivot with conditional aggregation
+CREATE VIEW IF NOT EXISTS v_ilce_oda_pivot AS
+SELECT
+    İlce,
+    SUM(CASE WHEN OdaSayisi = '1+1' THEN 1 ELSE 0 END) AS Oda_1_1,
+    SUM(CASE WHEN OdaSayisi = '2+1' THEN 1 ELSE 0 END) AS Oda_2_1,
+    SUM(CASE WHEN OdaSayisi NOT IN ('1+1', '2+1') OR OdaSayisi IS NULL THEN 1 ELSE 0 END) AS Diger,
+    COUNT(*) AS Toplam
+FROM Emlaklar
+GROUP BY İlce;
+
+-- Week13: Transactions & Triggers
+CREATE TABLE IF NOT EXISTS Fiyat_Degisim_Log (
+    LogID INTEGER PRIMARY KEY AUTOINCREMENT,
+    IlanID INT NOT NULL,
+    EskiFiyat DECIMAL(18, 2) NOT NULL,
+    YeniFiyat DECIMAL(18, 2) NOT NULL,
+    DegisimYuzdesi REAL NOT NULL,
+    DegisimTarihi TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    Aciklama TEXT,
+    FOREIGN KEY (IlanID) REFERENCES Emlaklar(IlanID)
+);
+
+CREATE TABLE IF NOT EXISTS Ilan_Degisim_Log (
+    LogID INTEGER PRIMARY KEY AUTOINCREMENT,
+    IlanID INT NOT NULL,
+    IslemTipi VARCHAR(30) NOT NULL,
+    AlanAdi VARCHAR(50),
+    EskiDeger TEXT,
+    YeniDeger TEXT,
+    DegisimTarihi TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    Kullanici VARCHAR(100) NOT NULL DEFAULT 'admin@njoyemlak.com',
+    Aciklama TEXT,
+    FOREIGN KEY (IlanID) REFERENCES Emlaklar(IlanID)
+);
+
+CREATE TABLE IF NOT EXISTS Kullanicilar (
+    KullaniciID INTEGER PRIMARY KEY AUTOINCREMENT,
+    AdSoyad VARCHAR(100) NOT NULL,
+    Email VARCHAR(120) NOT NULL UNIQUE,
+    SifreHash TEXT NOT NULL,
+    Rol VARCHAR(20) NOT NULL DEFAULT 'musteri',
+    KayitTarihi TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE TABLE IF NOT EXISTS Kaydedilen_Ilanlar (
+    KullaniciID INT NOT NULL,
+    IlanID INT NOT NULL,
+    KayitTarihi TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (KullaniciID, IlanID),
+    FOREIGN KEY (KullaniciID) REFERENCES Kullanicilar(KullaniciID),
+    FOREIGN KEY (IlanID) REFERENCES Emlaklar(IlanID)
+);
+
+CREATE TABLE IF NOT EXISTS Musteri_Sorulari (
+    SoruID INTEGER PRIMARY KEY AUTOINCREMENT,
+    KullaniciID INT NOT NULL,
+    IlanID INT,
+    SoruMetni TEXT NOT NULL,
+    CevapMetni TEXT,
+    Durum VARCHAR(20) NOT NULL DEFAULT 'Açık',
+    SoruTarihi TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    CevapTarihi TEXT,
+    Cevaplayan VARCHAR(100),
+    FOREIGN KEY (KullaniciID) REFERENCES Kullanicilar(KullaniciID),
+    FOREIGN KEY (IlanID) REFERENCES Emlaklar(IlanID)
+);
+
+CREATE TABLE IF NOT EXISTS Bildirimler (
+    BildirimID INTEGER PRIMARY KEY AUTOINCREMENT,
+    KullaniciID INT NOT NULL,
+    IlanID INT,
+    Tip VARCHAR(30) NOT NULL,
+    Baslik VARCHAR(160) NOT NULL,
+    Mesaj TEXT NOT NULL,
+    Okundu INTEGER NOT NULL DEFAULT 0,
+    OlusturmaTarihi TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    FOREIGN KEY (KullaniciID) REFERENCES Kullanicilar(KullaniciID),
+    FOREIGN KEY (IlanID) REFERENCES Emlaklar(IlanID)
+);
+
+CREATE TRIGGER IF NOT EXISTS trg_emlaklar_fiyat_audit
+AFTER UPDATE OF Fiyat ON Emlaklar
+FOR EACH ROW
+WHEN OLD.Fiyat <> NEW.Fiyat
+BEGIN
+    INSERT INTO Fiyat_Degisim_Log (
+        IlanID,
+        EskiFiyat,
+        YeniFiyat,
+        DegisimYuzdesi,
+        Aciklama
+    )
+    VALUES (
+        OLD.IlanID,
+        OLD.Fiyat,
+        NEW.Fiyat,
+        ROUND(((NEW.Fiyat - OLD.Fiyat) * 100.0) / NULLIF(OLD.Fiyat, 0), 2),
+        'Fiyat güncellemesi otomatik trigger ile kaydedildi.'
+    );
+END;
+
+CREATE VIEW IF NOT EXISTS v_fiyat_gecmisi AS
+SELECT
+    L.LogID,
+    L.IlanID,
+    E.Baslik,
+    L.EskiFiyat,
+    L.YeniFiyat,
+    L.DegisimYuzdesi,
+    L.DegisimTarihi,
+    L.Aciklama
+FROM Fiyat_Degisim_Log L
+INNER JOIN Emlaklar E ON E.IlanID = L.IlanID
+ORDER BY L.DegisimTarihi DESC, L.LogID DESC;
+
+CREATE VIEW IF NOT EXISTS v_ilan_gecmisi AS
+SELECT
+    L.LogID,
+    L.IlanID,
+    E.Baslik,
+    L.IslemTipi,
+    L.AlanAdi,
+    L.EskiDeger,
+    L.YeniDeger,
+    L.DegisimTarihi,
+    L.Kullanici,
+    L.Aciklama
+FROM Ilan_Degisim_Log L
+LEFT JOIN Emlaklar E ON E.IlanID = L.IlanID
+ORDER BY L.DegisimTarihi DESC, L.LogID DESC;
+
+-- Week13 transaction demo:
+-- BEGIN TRANSACTION;
+-- UPDATE Emlaklar SET Fiyat = Fiyat + 1000 WHERE IlanID = 1000;
+-- SELECT * FROM v_fiyat_gecmisi WHERE IlanID = 1000;
+-- ROLLBACK;
+
+-- Week14 backup demo:
+-- sqlite3 njoyemlak.db ".backup backups/njoyemlak_backup.db"
