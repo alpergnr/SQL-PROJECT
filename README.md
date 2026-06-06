@@ -62,7 +62,7 @@ njoy-emlak-db/
 
 ## 🗄️ Schema Overview
 
-**5 tables** were designed targeting 3NF. Relationships between tables are managed with Foreign Keys; the many-to-many relationship between Emlaklar and Ozellikler is resolved through a separate junction table.
+**11 tables** were designed targeting 3NF plus auditability and customer workflows. Relationships between tables are managed with Foreign Keys; the many-to-many relationship between Emlaklar and Ozellikler is resolved through a separate junction table, admin changes are recorded in audit log tables, and customers can save listings, ask questions, and receive notifications.
 
 | Table | Records | Description |
 |:---|:---:|:---|
@@ -71,12 +71,18 @@ njoy-emlak-db/
 | Ozellik_Kategorileri | 3 | Interior Feature / Exterior Feature / Orientation |
 | Ozellikler | 81 | Full feature pool |
 | Emlak_Ozellikleri | 246 | Listing–feature mappings |
+| Fiyat_Degisim_Log | 0+ | Trigger-generated price change audit records |
+| Ilan_Degisim_Log | 0+ | Admin listing create/update history |
+| Kullanicilar | 0+ | Registered customer accounts |
+| Kaydedilen_Ilanlar | 0+ | Customer saved listings |
+| Musteri_Sorulari | 0+ | Customer questions and admin answers |
+| Bildirimler | 0+ | Customer message and listing-change notifications |
 
 For the full ERD and column details → **[SCHEMA.md](./SCHEMA.md)**
 
 ---
 
-## ⚙️ Planned SQL Features
+## ⚙️ Implemented SQL Features
 
 | # | Feature | Purpose |
 |:---:|:---|:---|
@@ -85,9 +91,13 @@ For the full ERD and column details → **[SCHEMA.md](./SCHEMA.md)**
 | 3 | `GROUP BY` + `HAVING` | Agent-based portfolio grouping and filtering |
 | 4 | `COUNT` / `SUM` / `AVG` | Total listings, portfolio value, average price per m² |
 | 5 | `ORDER BY` | Sorting by price or square meters |
-| 6 | `VIEW` | Converting frequently used queries into reusable views |
-| 7 | `CTE` | Step-by-step structured, readable complex queries |
-| 8 | `INDEX` | Query acceleration via indexing on price and district columns |
+| 6 | `VIEW` | Reusable listing, portfolio, ranking, pivot, and audit views |
+| 7 | `CTE` | Region-level price analysis in `v_bolge_fiyat_analizi` |
+| 8 | `INDEX` + `EXPLAIN` | Query acceleration on price, district, agent, and feature columns |
+| 9 | Window Functions | Listing and agent rankings with `RANK()` / `ROW_NUMBER()` |
+| 10 | Pivot | Room-count pivot with `CASE WHEN` conditional aggregation |
+| 11 | Trigger + Transaction | Price update audit via `trg_emlaklar_fiyat_audit` |
+| 12 | Backup | SQLite backup command through the CLI |
 
 ---
 
@@ -193,6 +203,19 @@ python3 app.py stats
 # Performance benchmark
 python3 app.py benchmark --output table
 
+# CTE, window function, and pivot analytics
+python3 app.py analytics --limit 5 --output table
+
+# Show whether the indexed search uses the composite index
+python3 app.py explain --explain-district Beyoğlu --explain-max-price 50000
+
+# Transactional price update with trigger-backed audit log
+python3 app.py update-price 1000 41000 --note "Final demo update"
+python3 app.py price-history --limit 10
+
+# SQLite backup
+python3 app.py backup --backup-path backups/njoyemlak_backup.db
+
 # Machine-friendly output
 python3 app.py list --limit 5 --output json
 ```
@@ -211,6 +234,13 @@ python -m pip install flask
 python webapp.py
 
 # Open in browser → http://localhost:5000
+
+# Customer login/register
+# http://localhost:5000/login
+# http://localhost:5000/register
+
+# Admin panel uses the same login page.
+# Enter the admin credentials in /login to open http://localhost:5000/admin.
 ```
 
 #### Features
@@ -221,6 +251,10 @@ python webapp.py
 | **Arama** | Advanced search with max price, district, feature, and limit filters |
 | **Danışmanlar** | Agent portfolio stats with animated progress bars |
 | **Performans** | One-click database query benchmark with timing results |
+| **Analiz** | Region, price, room type, and agent portfolio analytics |
+| **İlan Geçmişi** | Listing add/update history from the admin panel |
+| **Admin Panel** | Login-protected listing create, listing update, flexible price update, and grouped feature selection workflows |
+| **Müşteri Paneli** | Customer registration/login, saved listings, questions, messages, and notifications |
 
 #### Screenshots
 
@@ -250,6 +284,21 @@ python webapp.py
 | `GET /api/search?max_price=&district=&feature=&limit=` | Filtered search |
 | `GET /api/stats` | Agent portfolio statistics |
 | `GET /api/benchmark` | Query performance metrics |
+| `GET /api/analytics?limit=` | CTE, window, pivot, and ranking analytics |
+| `GET /api/explain?max_price=&district=&limit=` | Indexed search query plan |
+| `GET /api/price-history?limit=` | Trigger-backed price audit history |
+| `GET /api/listing-history?limit=` | Admin listing create/update history |
+| `POST /api/update-price` | Transactional price update with audit trigger |
+| `GET /api/account/bootstrap` | Customer dashboard data |
+| `POST /api/account/save-listing` | Save a listing |
+| `DELETE /api/account/save-listing/<id>` | Remove a saved listing |
+| `POST /api/account/questions` | Send a question to admin |
+| `POST /api/account/notifications/read` | Mark customer notifications as read |
+| `GET /api/admin/bootstrap` | Admin panel bootstrap data |
+| `POST /api/admin/listings` | Create a listing |
+| `PUT /api/admin/listings/<id>` | Update listing fields |
+| `POST /api/admin/listings/<id>/price` | Update listing price |
+| `POST /api/admin/questions/<id>/answer` | Answer a customer question |
 | `GET /api/meta` | Available filter options (districts, features) |
 
 
@@ -267,3 +316,4 @@ make test
 
 - CI workflow: `.github/workflows/ci.yml`
 - Contribution guide: `CONTRIBUTING.md`
+- Unit tests cover 10 CLI workflows, including analytics, EXPLAIN, backup, and trigger-backed price updates.
