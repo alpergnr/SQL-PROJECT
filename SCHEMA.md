@@ -8,7 +8,7 @@
 
 ## Entity Relationship Diagram
 
-\[!\[Schema ERD](https://github.com/alpergnr/SQL-PROJECT/raw/main/docs/screenshots/schema\_erd.png)](https://github.com/alpergnr/SQL-PROJECT/blob/main/docs/screenshots/schema\_erd.png)
+!\[Schema ERD](https://github.com/alpergnr/SQL-PROJECT/raw/main/docs/screenshots/schema\_erd.png)
 
 \---
 
@@ -48,7 +48,7 @@ Stores core data of rental and for-sale property listings in the portfolio.
 
 \---
 
-### 3\. `Ozellik\_Kategorileri`
+### 3\. `Ozellik\\\_Kategorileri`
 
 Main headings that provide grouping for features.
 
@@ -81,7 +81,7 @@ Contains the full feature pool linked to categories.
 
 \---
 
-### 5\. `Emlak\_Ozellikleri` *(Bridge / Junction Table)*
+### 5\. `Emlak\\\_Ozellikleri` *(Bridge / Junction Table)*
 
 Resolves the **many-to-many (M:N)** relationship between Emlaklar and Ozellikler.
 
@@ -95,7 +95,7 @@ Resolves the **many-to-many (M:N)** relationship between Emlaklar and Ozellikler
 
 \---
 
-### 6\. `Fiyat\_Degisim\_Log`
+### 6\. `Fiyat\\\_Degisim\\\_Log`
 
 Stores price change audit records generated automatically by the update trigger.
 
@@ -111,7 +111,7 @@ Stores price change audit records generated automatically by the update trigger.
 
 \---
 
-### 7\. `Ilan\_Degisim\_Log`
+### 7\. `Ilan\\\_Degisim\\\_Log`
 
 Stores admin panel listing changes, including listing creation, field updates, and price updates.
 
@@ -144,7 +144,7 @@ Stores registered customer accounts.
 
 \---
 
-### 9\. `Kaydedilen\_Ilanlar`
+### 9\. `Kaydedilen\\\_Ilanlar`
 
 Stores customer saved/favorite listings.
 
@@ -157,7 +157,7 @@ Stores customer saved/favorite listings.
 
 \---
 
-### 10\. `Musteri\_Sorulari`
+### 10\. `Musteri\\\_Sorulari`
 
 Stores questions sent by customers and answers written by admins.
 
@@ -198,31 +198,31 @@ Stores customer notifications for admin answers and saved-listing changes.
 
 |View|SQL Topic|Purpose|
 |-|-|-|
-|`v\_ilan\_detay`|VIEW + JOIN|Reusable listing detail view with agent info and m² price|
-|`v\_danisman\_portfoy`|VIEW + GROUP BY|Agent portfolio totals and averages|
-|`v\_ozellikli\_ilanlar`|VIEW + GROUP\_CONCAT|Listing features grouped by category|
-|`v\_bolge\_fiyat\_analizi`|CTE|District-level price analysis|
-|`v\_ilan\_fiyat\_siralamasi`|Window Function|Listing price ranking with `RANK()` and `ROW\_NUMBER()`|
-|`v\_danisman\_portfoy\_siralamasi`|Window Function|Agent ranking by portfolio value and listing count|
-|`v\_ilce\_oda\_pivot`|Pivot|Room-count pivot using `CASE WHEN`|
-|`v\_fiyat\_gecmisi`|Audit View|Human-readable price history|
-|`v\_ilan\_gecmisi`|Admin History View|Human-readable listing create/update history|
+|`v\\\_ilan\\\_detay`|VIEW + JOIN|Reusable listing detail view with agent info and m² price|
+|`v\\\_danisman\\\_portfoy`|VIEW + GROUP BY|Agent portfolio totals and averages|
+|`v\\\_ozellikli\\\_ilanlar`|VIEW + GROUP\_CONCAT|Listing features grouped by category|
+|`v\\\_bolge\\\_fiyat\\\_analizi`|CTE|District-level price analysis|
+|`v\\\_ilan\\\_fiyat\\\_siralamasi`|Window Function|Listing price ranking with `RANK()` and `ROW\\\_NUMBER()`|
+|`v\\\_danisman\\\_portfoy\\\_siralamasi`|Window Function|Agent ranking by portfolio value and listing count|
+|`v\\\_ilce\\\_oda\\\_pivot`|Pivot|Room-count pivot using `CASE WHEN`|
+|`v\\\_fiyat\\\_gecmisi`|Audit View|Human-readable price history|
+|`v\\\_ilan\\\_gecmisi`|Admin History View|Human-readable listing create/update history|
 
 ### Indexes
 
 |Index|Columns|Purpose|
 |-|-|-|
-|`idx\_emlaklar\_fiyat`|`Fiyat`|Price sorting/filtering|
-|`idx\_emlaklar\_ilce\_fiyat`|`İlce`, `Fiyat`|Composite district + price search|
-|`idx\_emlaklar\_danisman`|`DanismanID`|Agent portfolio joins|
-|`idx\_ozellikler\_ad`|`OzellikAdi`|Feature search|
-|`idx\_emlak\_ozellikleri\_ozellik`|`OzellikID`, `IlanID`|Feature-to-listing junction lookups|
+|`idx\\\_emlaklar\\\_fiyat`|`Fiyat`|Price sorting/filtering|
+|`idx\\\_emlaklar\\\_ilce\\\_fiyat`|`İlce`, `Fiyat`|Composite district + price search|
+|`idx\\\_emlaklar\\\_danisman`|`DanismanID`|Agent portfolio joins|
+|`idx\\\_ozellikler\\\_ad`|`OzellikAdi`|Feature search|
+|`idx\\\_emlak\\\_ozellikleri\\\_ozellik`|`OzellikID`, `IlanID`|Feature-to-listing junction lookups|
 
 ### Trigger
 
 |Trigger|Timing|Purpose|
 |-|-|-|
-|`trg\_emlaklar\_fiyat\_audit`|`AFTER UPDATE OF Fiyat`|Inserts a row into `Fiyat\_Degisim\_Log` whenever a listing price changes|
+|`trg\\\_emlaklar\\\_fiyat\\\_audit`|`AFTER UPDATE OF Fiyat`|Inserts a row into `Fiyat\\\_Degisim\\\_Log` whenever a listing price changes|
 
 \---
 
@@ -244,5 +244,5 @@ Stores customer notifications for admin answers and saved-listing changes.
 
 \---
 
-> \*\*Data Source:\*\* All data was manually collected (data scraping) from \*\*\[njoyemlak.com](https://njoy.sahibinden.com/)\*\*.
+> \\\*\\\*Data Source:\\\*\\\* All data was manually collected (data scraping) from \\\*\\\*\\\[njoyemlak.com](https://njoy.sahibinden.com/)\\\*\\\*.
 
