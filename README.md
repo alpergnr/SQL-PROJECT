@@ -8,7 +8,7 @@
 
 | | | |
 |:---|:---|:---|
-| Altay Yeles | Alper Günerr | Mustafa Ulaş Karaaslan |
+| Altay Yeles | Alper Güner | Mustafa Ulaş Karaaslan |
 | Mehmet Can Öztürk | Emre Aslan | 
 
 ---
