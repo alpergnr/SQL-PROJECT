@@ -41,6 +41,7 @@ Stores core data of rental and for-sale property listings in the portfolio.
 | `BrutM2` | INT | — | Gross square meters |
 | `NetM2` | INT | — | Net square meters |
 | `OdaSayisi` | VARCHAR(20) | — | Room layout such as 1+1, 2+1 |
+| `Aktif` | INTEGER | DEFAULT 1 | Soft-delete flag; `0` means the listing is hidden from site/admin lists |
 
 ---
 

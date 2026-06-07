@@ -111,6 +111,15 @@ class NjoyRepository:
         """
         with closing(self._connect()) as conn:
             conn.executescript(schema)
+            columns = {
+                row["name"]
+                for row in conn.execute("PRAGMA table_info(Emlaklar)").fetchall()
+            }
+            if "Aktif" not in columns:
+                conn.execute(
+                    "ALTER TABLE Emlaklar ADD COLUMN Aktif INTEGER NOT NULL DEFAULT 1"
+                )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_emlaklar_aktif ON Emlaklar(Aktif)")
             conn.commit()
 
     def _timed_fetchall(
@@ -129,6 +138,7 @@ class NjoyRepository:
                        E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
                 FROM Emlaklar E
                 INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+                WHERE E.Aktif = 1
                 ORDER BY E.Fiyat DESC
                 LIMIT ?
             """,
@@ -137,6 +147,7 @@ class NjoyRepository:
                        E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
                 FROM Emlaklar E
                 INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+                WHERE E.Aktif = 1
                 ORDER BY E.Fiyat ASC
                 LIMIT ?
             """,
@@ -145,6 +156,7 @@ class NjoyRepository:
                        E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
                 FROM Emlaklar E
                 INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+                WHERE E.Aktif = 1
                 ORDER BY E.NetM2 DESC
                 LIMIT ?
             """,
@@ -153,6 +165,7 @@ class NjoyRepository:
                        E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
                 FROM Emlaklar E
                 INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+                WHERE E.Aktif = 1
                 ORDER BY E.IlanID ASC
                 LIMIT ?
             """,
@@ -172,7 +185,7 @@ class NjoyRepository:
         limit: int,
     ) -> list[Listing]:
         params: list[object] = []
-        where_clauses: list[str] = []
+        where_clauses: list[str] = ["E.Aktif = 1"]
         joins = ""
 
         if max_price is not None:
@@ -192,7 +205,7 @@ class NjoyRepository:
             where_clauses.append("O.OzellikAdi = ?")
             params.append(feature)
 
-        where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+        where_sql = "WHERE " + " AND ".join(where_clauses)
         query_parts = [
             """
             SELECT DISTINCT E.IlanID, E.Baslik, E.Fiyat, E.İlce, E.Mahalle, E.EmlakTipi,
@@ -218,7 +231,7 @@ class NjoyRepository:
             SELECT K.AdSoyad, COUNT(E.IlanID) AS ToplamIlan,
                    SUM(E.Fiyat) AS ToplamPortfoy
             FROM Ekip K
-            LEFT JOIN Emlaklar E ON E.DanismanID = K.DanismanID
+            LEFT JOIN Emlaklar E ON E.DanismanID = K.DanismanID AND E.Aktif = 1
             GROUP BY K.AdSoyad
             ORDER BY ToplamPortfoy DESC
         """
@@ -237,9 +250,10 @@ class NjoyRepository:
         query = """
             SELECT OK.KategoriAdi, O.OzellikAdi
             FROM Emlak_Ozellikleri EO
+            INNER JOIN Emlaklar E ON E.IlanID = EO.IlanID
             INNER JOIN Ozellikler O ON O.OzellikID = EO.OzellikID
             INNER JOIN Ozellik_Kategorileri OK ON OK.KategoriID = O.KategoriID
-            WHERE EO.IlanID = ?
+            WHERE EO.IlanID = ? AND E.Aktif = 1
             ORDER BY OK.KategoriID, O.OzellikAdi
         """
         with closing(self._connect()) as conn:
@@ -272,28 +286,77 @@ class NjoyRepository:
     def advanced_analytics(self, limit: int = 10) -> dict[str, list[dict[str, object]]]:
         queries = {
             "region_analysis": """
+                WITH BolgeOzet AS (
+                    SELECT
+                        İlce,
+                        COUNT(*) AS IlanSayisi,
+                        ROUND(AVG(Fiyat), 2) AS OrtalamaFiyat,
+                        MIN(Fiyat) AS EnDusukFiyat,
+                        MAX(Fiyat) AS EnYuksekFiyat,
+                        ROUND(AVG(Fiyat / NULLIF(NetM2, 0)), 2) AS OrtalamaNetM2Fiyati
+                    FROM Emlaklar
+                    WHERE Aktif = 1
+                    GROUP BY İlce
+                )
                 SELECT İlce, IlanSayisi, OrtalamaFiyat, EnDusukFiyat, EnYuksekFiyat,
-                       OrtalamaNetM2Fiyati, FiyatAraligi
-                FROM v_bolge_fiyat_analizi
+                       OrtalamaNetM2Fiyati,
+                       ROUND(EnYuksekFiyat - EnDusukFiyat, 2) AS FiyatAraligi
+                FROM BolgeOzet
                 ORDER BY OrtalamaFiyat DESC
                 LIMIT ?
             """,
             "listing_ranking": """
                 SELECT IlanID, Baslik, Fiyat, İlce, IlceIciFiyatSirasi, GenelFiyatSirasi
-                FROM v_ilan_fiyat_siralamasi
+                FROM (
+                    SELECT
+                        IlanID,
+                        Baslik,
+                        Fiyat,
+                        İlce,
+                        RANK() OVER (PARTITION BY İlce ORDER BY Fiyat DESC) AS IlceIciFiyatSirasi,
+                        ROW_NUMBER() OVER (ORDER BY Fiyat DESC) AS GenelFiyatSirasi
+                    FROM Emlaklar
+                    WHERE Aktif = 1
+                )
                 ORDER BY GenelFiyatSirasi
                 LIMIT ?
             """,
             "agent_ranking": """
                 SELECT AdSoyad, ToplamIlan, ToplamPortfoy, OrtalamaFiyat,
                        PortfoyDegeriSirasi, IlanSayisiSirasi
-                FROM v_danisman_portfoy_siralamasi
+                FROM (
+                    SELECT
+                        AdSoyad,
+                        ToplamIlan,
+                        ToplamPortfoy,
+                        OrtalamaFiyat,
+                        RANK() OVER (ORDER BY ToplamPortfoy DESC) AS PortfoyDegeriSirasi,
+                        RANK() OVER (ORDER BY ToplamIlan DESC) AS IlanSayisiSirasi
+                    FROM (
+                        SELECT
+                            K.AdSoyad,
+                            COUNT(E.IlanID) AS ToplamIlan,
+                            COALESCE(SUM(E.Fiyat), 0) AS ToplamPortfoy,
+                            ROUND(COALESCE(AVG(E.Fiyat), 0), 2) AS OrtalamaFiyat
+                        FROM Ekip K
+                        LEFT JOIN Emlaklar E
+                            ON E.DanismanID = K.DanismanID AND E.Aktif = 1
+                        GROUP BY K.DanismanID, K.AdSoyad
+                    )
+                )
                 ORDER BY PortfoyDegeriSirasi
                 LIMIT ?
             """,
             "room_pivot": """
-                SELECT İlce, Oda_1_1, Oda_2_1, Diger, Toplam
-                FROM v_ilce_oda_pivot
+                SELECT
+                    İlce,
+                    SUM(CASE WHEN OdaSayisi = '1+1' THEN 1 ELSE 0 END) AS Oda_1_1,
+                    SUM(CASE WHEN OdaSayisi = '2+1' THEN 1 ELSE 0 END) AS Oda_2_1,
+                    SUM(CASE WHEN OdaSayisi NOT IN ('1+1', '2+1') OR OdaSayisi IS NULL THEN 1 ELSE 0 END) AS Diger,
+                    COUNT(*) AS Toplam
+                FROM Emlaklar
+                WHERE Aktif = 1
+                GROUP BY İlce
                 ORDER BY Toplam DESC, İlce
                 LIMIT ?
             """,
@@ -311,7 +374,7 @@ class NjoyRepository:
             EXPLAIN QUERY PLAN
             SELECT E.IlanID, E.Baslik, E.Fiyat, E.İlce
             FROM Emlaklar E
-            WHERE E.Fiyat <= ? AND E.İlce = ?
+            WHERE E.Aktif = 1 AND E.Fiyat <= ? AND E.İlce = ?
             ORDER BY E.Fiyat DESC
             LIMIT ?
         """
@@ -349,6 +412,7 @@ class NjoyRepository:
                    E.EmlakTipi, E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
             FROM Emlaklar E
             INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+            WHERE E.Aktif = 1
             ORDER BY E.IlanID DESC
             LIMIT ?
         """
@@ -473,7 +537,7 @@ class NjoyRepository:
             FROM Kaydedilen_Ilanlar KI
             INNER JOIN Emlaklar E ON E.IlanID = KI.IlanID
             INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
-            WHERE KI.KullaniciID = ?
+            WHERE KI.KullaniciID = ? AND E.Aktif = 1
             ORDER BY KI.KayitTarihi DESC
         """
         with closing(self._connect()) as conn:
@@ -736,7 +800,10 @@ class NjoyRepository:
         with closing(self._connect()) as conn:
             try:
                 conn.execute("BEGIN IMMEDIATE")
-                row = conn.execute("SELECT * FROM Emlaklar WHERE IlanID = ?", (ilan_id,)).fetchone()
+                row = conn.execute(
+                    "SELECT * FROM Emlaklar WHERE IlanID = ? AND Aktif = 1",
+                    (ilan_id,),
+                ).fetchone()
                 if row is None:
                     raise AppError(f"İlan bulunamadı: {ilan_id}")
                 if "DanismanID" in data:
@@ -813,13 +880,69 @@ class NjoyRepository:
                 raise
         return self.get_admin_listing(ilan_id)
 
+    def delete_listing(self, ilan_id: int, user: str, note: str | None = None) -> dict[str, object]:
+        with closing(self._connect()) as conn:
+            try:
+                conn.execute("BEGIN IMMEDIATE")
+                row = conn.execute(
+                    """
+                    SELECT IlanID, Baslik, Fiyat
+                    FROM Emlaklar
+                    WHERE IlanID = ? AND Aktif = 1
+                    """,
+                    (ilan_id,),
+                ).fetchone()
+                if row is None:
+                    raise AppError(f"İlan bulunamadı: {ilan_id}")
+
+                watchers = conn.execute(
+                    """
+                    SELECT KullaniciID
+                    FROM Kaydedilen_Ilanlar
+                    WHERE IlanID = ?
+                    """,
+                    (ilan_id,),
+                ).fetchall()
+                for watcher in watchers:
+                    self._insert_notification(
+                        conn,
+                        user_id=int(watcher["KullaniciID"]),
+                        ilan_id=ilan_id,
+                        tip="ILAN_SILME",
+                        baslik="Kaydettiğiniz ilan kaldırıldı",
+                        mesaj=f"Kaydettiğiniz #{ilan_id} numaralı ilan yayından kaldırıldı.",
+                    )
+
+                conn.execute("DELETE FROM Kaydedilen_Ilanlar WHERE IlanID = ?", (ilan_id,))
+                conn.execute("UPDATE Emlaklar SET Aktif = 0 WHERE IlanID = ?", (ilan_id,))
+                self._insert_listing_log(
+                    conn,
+                    ilan_id=ilan_id,
+                    islem_tipi="SILME",
+                    alan_adi="İlan",
+                    eski_deger=f"{row['Baslik']} | {self._display_value(row['Fiyat'])} TL",
+                    yeni_deger="Yayından kaldırıldı",
+                    user=user,
+                    note=note or "Admin panelinden ilan silindi.",
+                )
+                conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
+        return {
+            "IlanID": ilan_id,
+            "Baslik": row["Baslik"],
+            "Aktif": 0,
+            "BildirimSayisi": len(watchers),
+        }
+
     def get_admin_listing(self, ilan_id: int) -> dict[str, object]:
         query = """
             SELECT E.IlanID, E.DanismanID, E.Baslik, E.Fiyat, E.İl, E.İlce, E.Mahalle,
                    E.EmlakTipi, E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
             FROM Emlaklar E
             INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
-            WHERE E.IlanID = ?
+            WHERE E.IlanID = ? AND E.Aktif = 1
         """
         with closing(self._connect()) as conn:
             row = conn.execute(query, (ilan_id,)).fetchone()
@@ -840,7 +963,7 @@ class NjoyRepository:
             try:
                 conn.execute("BEGIN IMMEDIATE")
                 row = conn.execute(
-                    "SELECT IlanID, Baslik, Fiyat FROM Emlaklar WHERE IlanID = ?",
+                    "SELECT IlanID, Baslik, Fiyat FROM Emlaklar WHERE IlanID = ? AND Aktif = 1",
                     (ilan_id,),
                 ).fetchone()
                 if row is None:
@@ -1064,7 +1187,10 @@ class NjoyRepository:
 
     @staticmethod
     def _ensure_listing_exists(conn: sqlite3.Connection, ilan_id: int) -> None:
-        row = conn.execute("SELECT IlanID FROM Emlaklar WHERE IlanID = ?", (ilan_id,)).fetchone()
+        row = conn.execute(
+            "SELECT IlanID FROM Emlaklar WHERE IlanID = ? AND Aktif = 1",
+            (ilan_id,),
+        ).fetchone()
         if row is None:
             raise AppError(f"İlan bulunamadı: {ilan_id}")
 

@@ -252,9 +252,9 @@ python webapp.py
 | **Danışmanlar** | Agent portfolio stats with animated progress bars |
 | **Performans** | One-click database query benchmark with timing results |
 | **Analiz** | Region, price, room type, and agent portfolio analytics |
-| **İlan Geçmişi** | Listing add/update history from the admin panel |
-| **Admin Panel** | Login-protected listing create, listing update, flexible price update, and grouped feature selection workflows |
-| **Müşteri Paneli** | Customer registration/login, saved listings, questions, messages, and notifications |
+| **İlan Geçmişi** | Listing add/update/delete history from the admin panel |
+| **Admin Panel** | Login-protected listing create, listing update, listing delete, flexible price update, and grouped feature selection workflows |
+| **Kullanıcı Akışı** | Customer registration/login on the same site screen, listing save buttons, messages, and notifications |
 
 #### Screenshots
 
@@ -289,7 +289,7 @@ python webapp.py
 | `GET /api/price-history?limit=` | Trigger-backed price audit history |
 | `GET /api/listing-history?limit=` | Admin listing create/update history |
 | `POST /api/update-price` | Transactional price update with audit trigger |
-| `GET /api/account/bootstrap` | Customer dashboard data |
+| `GET /api/account/bootstrap` | Logged-in customer data for homepage messages, notifications, and saved listings |
 | `POST /api/account/save-listing` | Save a listing |
 | `DELETE /api/account/save-listing/<id>` | Remove a saved listing |
 | `POST /api/account/questions` | Send a question to admin |
@@ -297,6 +297,7 @@ python webapp.py
 | `GET /api/admin/bootstrap` | Admin panel bootstrap data |
 | `POST /api/admin/listings` | Create a listing |
 | `PUT /api/admin/listings/<id>` | Update listing fields |
+| `DELETE /api/admin/listings/<id>` | Soft-delete a listing and write listing history |
 | `POST /api/admin/listings/<id>/price` | Update listing price |
 | `POST /api/admin/questions/<id>/answer` | Answer a customer question |
 | `GET /api/meta` | Available filter options (districts, features) |

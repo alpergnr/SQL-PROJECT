@@ -87,7 +87,14 @@ def _current_user_id() -> int:
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    user = None
+    user_id = session.get("user_id")
+    if user_id:
+        try:
+            user = repo.get_customer(int(user_id))
+        except (AppError, TypeError, ValueError):
+            session.pop("user_id", None)
+    return render_template("index.html", user=user)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -104,7 +111,7 @@ def login():
         if user and check_password_hash(user["SifreHash"], password):
             session.clear()
             session["user_id"] = user["KullaniciID"]
-            return redirect(url_for("account_panel"))
+            return redirect(url_for("index"))
         error = "E-posta veya şifre hatalı."
     return render_template("login.html", error=error)
 
@@ -127,7 +134,7 @@ def register():
                 )
                 session.clear()
                 session["user_id"] = user["KullaniciID"]
-                return redirect(url_for("account_panel"))
+                return redirect(url_for("index"))
             except AppError as exc:
                 error = str(exc)
     return render_template("register.html", error=error)
@@ -141,7 +148,7 @@ def admin_login_redirect():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("index"))
 
 
 @app.route("/admin")
@@ -153,8 +160,7 @@ def admin_panel():
 @app.route("/account")
 @_customer_required
 def account_panel():
-    user = repo.get_customer(_current_user_id())
-    return render_template("account.html", user=user)
+    return redirect(url_for("index"))
 
 
 # ─── API Endpoints ─────────────────────────────────────────────────────────────
@@ -215,7 +221,7 @@ def api_listing_detail(ilan_id: int):
                    E.EmlakTipi, E.BrutM2, E.NetM2, E.OdaSayisi, K.AdSoyad AS Danisman
             FROM Emlaklar E
             INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
-            WHERE E.IlanID = ?
+            WHERE E.IlanID = ? AND E.Aktif = 1
         """, (ilan_id,)).fetchone()
     finally:
         conn.close()
@@ -389,6 +395,21 @@ def api_admin_update_listing(ilan_id: int):
     return jsonify(result)
 
 
+@app.route("/api/admin/listings/<int:ilan_id>", methods=["DELETE"])
+@_admin_required
+def api_admin_delete_listing(ilan_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        result = repo.delete_listing(
+            ilan_id=ilan_id,
+            user=_current_admin(),
+            note=payload.get("note") or "Admin panelinden ilan silindi.",
+        )
+    except AppError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(result)
+
+
 @app.route("/api/admin/listings/<int:ilan_id>/price", methods=["POST"])
 @_admin_required
 def api_admin_update_price(ilan_id: int):
@@ -430,7 +451,7 @@ def api_meta():
     try:
         districts = [
             row[0] for row in conn.execute(
-                "SELECT DISTINCT İlce FROM Emlaklar ORDER BY İlce"
+                "SELECT DISTINCT İlce FROM Emlaklar WHERE Aktif = 1 ORDER BY İlce"
             ).fetchall()
         ]
         features = [
@@ -440,7 +461,7 @@ def api_meta():
         ]
         emlak_tipleri = [
             row[0] for row in conn.execute(
-                "SELECT DISTINCT EmlakTipi FROM Emlaklar ORDER BY EmlakTipi"
+                "SELECT DISTINCT EmlakTipi FROM Emlaklar WHERE Aktif = 1 ORDER BY EmlakTipi"
             ).fetchall()
         ]
     finally:

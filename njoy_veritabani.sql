@@ -23,6 +23,7 @@ CREATE TABLE Emlaklar (
     BrutM2 INT,
     NetM2 INT,
     OdaSayisi VARCHAR(20),
+    Aktif INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY (DanismanID) REFERENCES Ekip(DanismanID)
 );
 
@@ -422,6 +423,9 @@ ON Emlaklar(İlce, Fiyat);
 CREATE INDEX IF NOT EXISTS idx_emlaklar_danisman
 ON Emlaklar(DanismanID);
 
+CREATE INDEX IF NOT EXISTS idx_emlaklar_aktif
+ON Emlaklar(Aktif);
+
 CREATE INDEX IF NOT EXISTS idx_ozellikler_ad
 ON Ozellikler(OzellikAdi);
 
@@ -447,7 +451,8 @@ SELECT
     K.Unvan,
     K.Telefon
 FROM Emlaklar E
-INNER JOIN Ekip K ON K.DanismanID = E.DanismanID;
+INNER JOIN Ekip K ON K.DanismanID = E.DanismanID
+WHERE E.Aktif = 1;
 
 CREATE VIEW IF NOT EXISTS v_danisman_portfoy AS
 SELECT
@@ -460,7 +465,7 @@ SELECT
     COALESCE(MIN(E.Fiyat), 0) AS EnDusukFiyat,
     COALESCE(MAX(E.Fiyat), 0) AS EnYuksekFiyat
 FROM Ekip K
-LEFT JOIN Emlaklar E ON E.DanismanID = K.DanismanID
+LEFT JOIN Emlaklar E ON E.DanismanID = K.DanismanID AND E.Aktif = 1
 GROUP BY K.DanismanID, K.AdSoyad, K.Unvan;
 
 CREATE VIEW IF NOT EXISTS v_ozellikli_ilanlar AS
@@ -474,6 +479,7 @@ FROM Emlaklar E
 INNER JOIN Emlak_Ozellikleri EO ON EO.IlanID = E.IlanID
 INNER JOIN Ozellikler O ON O.OzellikID = EO.OzellikID
 INNER JOIN Ozellik_Kategorileri OK ON OK.KategoriID = O.KategoriID
+WHERE E.Aktif = 1
 GROUP BY E.IlanID, E.Baslik, E.Fiyat, OK.KategoriAdi;
 
 -- Week07: CTEs
@@ -487,6 +493,7 @@ WITH BolgeOzet AS (
         MAX(Fiyat) AS EnYuksekFiyat,
         ROUND(AVG(Fiyat / NULLIF(NetM2, 0)), 2) AS OrtalamaNetM2Fiyati
     FROM Emlaklar
+    WHERE Aktif = 1
     GROUP BY İlce
 )
 SELECT
@@ -533,6 +540,7 @@ SELECT
     SUM(CASE WHEN OdaSayisi NOT IN ('1+1', '2+1') OR OdaSayisi IS NULL THEN 1 ELSE 0 END) AS Diger,
     COUNT(*) AS Toplam
 FROM Emlaklar
+WHERE Aktif = 1
 GROUP BY İlce;
 
 -- Week13: Transactions & Triggers
