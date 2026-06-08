@@ -4,7 +4,9 @@
 **Altay Yeles · Alper Güner · Mustafa Ulaş Karaaslan · Mehmet Can Öztürk · Emre Aslan**
 
 ---
+## Entity Relationship Diagram
 
+!\[Schema ERD](docs/screenshots/schema\_erd.png)
 
 ---
 
