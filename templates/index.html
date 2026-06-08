@@ -43,9 +43,12 @@
                 {% if user %}
                 
                 <span class="nav-user-name">{{ user.AdSoyad }}</span>
-                <a class="nav-link nav-link-admin" href="/account" id="nav-account">
-                    <span class="nav-link-icon">◎</span><span>Hesabım</span>
-                </a>
+                <button class="nav-link" data-tab="messages" id="nav-messages">
+                    <span class="nav-link-icon">✉</span><span>Mesajlar</span>
+                </button>
+                <button class="nav-link" data-tab="notifications" id="nav-notifications">
+                    <span class="nav-link-icon">◔</span><span>Bildirimler</span>
+                </button>
                 <a class="nav-link nav-link-admin" href="/logout" id="nav-logout">
                     <span class="nav-link-icon">↩</span><span>Çıkış</span>
                 </a>

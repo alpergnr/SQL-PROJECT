@@ -160,9 +160,8 @@ def admin_panel():
 @app.route("/account")
 @_customer_required
 def account_panel():
-    # redirect yerine account.html'i render etmeliyiz
-    user = repo.get_customer(_current_user_id())
-    return render_template("account.html", user=user)
+    # Hesap işlevleri ana sayfaya (Mesajlar/Bildirimler sekmeleri) taşındı.
+    return redirect(url_for("index"))
 
 
 # ─── API Endpoints ─────────────────────────────────────────────────────────────
