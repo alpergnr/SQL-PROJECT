@@ -6,7 +6,7 @@
 ---
 ## Entity Relationship Diagram
 
-!\[Schema ERD](docs/screenshots/schema\_erd.png)
+![Schema ERD](docs/screenshots/schema_erd.png)
 
 ---
 
