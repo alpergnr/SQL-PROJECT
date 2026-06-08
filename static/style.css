@@ -1044,3 +1044,29 @@ img { max-width: 100%; display: block; }
     .form-row { grid-template-columns: 1fr; }
     .form-group--action { align-items: flex-start; }
 }
+/* Login ve Register sayfalarındaki buton mesafesi */
+.admin-login-card .admin-form .btn-primary {
+    margin-top: 1.5rem;
+    width: 100%; /* Butonun tam genişlikte olması tasarımı daha şık yapar */
+}
+/* Admin Panel Tab Tasarımı */
+.admin-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--c-border-subtle);
+    padding-bottom: var(--space-md);
+    flex-wrap: wrap;
+}
+.admin-tab-content {
+    display: none; /* Varsayılan olarak gizli */
+    animation: panelIn .4s var(--ease-out) both;
+}
+.admin-tab-content.active {
+    display: block; /* Sadece aktif olan görünür */
+}
+.admin-tabs .btn-secondary.active {
+    color: var(--c-gold);
+    border-color: var(--c-gold-dim);
+    background: var(--c-gold-glow);
+}

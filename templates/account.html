@@ -47,8 +47,18 @@
                 <span class="stat-label-text">Yeni Bildirim</span>
             </article>
         </section>
+        
+        <div class="admin-tabs" id="customer-tabs">
+            <button class="btn-secondary active" data-target="tab-kaydedilenler">Kaydedilen İlanlar</button>
+            <button class="btn-secondary" data-target="tab-sorusor">Soru Sor</button>
+            <button class="btn-secondary" data-target="tab-tumilanlar">Tüm İlanlar</button>
+            <button class="btn-secondary" data-target="tab-mesajlar">Mesaj Kutusu</button>
+            <button class="btn-secondary" data-target="tab-bildirimler">Bildirimler</button>
+        </div>
 
         <section class="admin-grid">
+            
+            <div id="tab-kaydedilenler" class="admin-tab-content active">
             <article class="analysis-card">
                 <div class="analysis-card-head">
                     <h2>Kaydedilen İlanlar</h2>
@@ -56,7 +66,9 @@
                 </div>
                 <div id="saved-listings"></div>
             </article>
+        </div>
 
+        <div id="tab-sorusor" class="admin-tab-content">
             <article class="analysis-card">
                 <div class="analysis-card-head">
                     <h2>Soru Sor</h2>
@@ -76,17 +88,19 @@
                     <button class="btn-primary" type="submit">Soruyu Gönder</button>
                 </form>
             </article>
-        </section>
+        </div>
 
-        <section class="analysis-card admin-history-card">
-            <div class="analysis-card-head">
-                <h2>Tüm İlanlar</h2>
-                <span>Kaydet</span>
-            </div>
-            <div id="customer-listings"></div>
-        </section>
+        <div id="tab-tumilanlar" class="admin-tab-content">
+            <section class="analysis-card admin-history-card">
+                <div class="analysis-card-head">
+                    <h2>Tüm İlanlar</h2>
+                    <span>Kaydet</span>
+                </div>
+                <div id="customer-listings"></div>
+            </section>
+        </div>
 
-        <section class="admin-grid admin-grid--lower">
+        <div id="tab-mesajlar" class="admin-tab-content">
             <article class="analysis-card">
                 <div class="analysis-card-head">
                     <h2>Mesaj Kutusu</h2>
@@ -94,7 +108,9 @@
                 </div>
                 <div id="customer-messages"></div>
             </article>
+        </div>
 
+        <div id="tab-bildirimler" class="admin-tab-content">
             <article class="analysis-card">
                 <div class="analysis-card-head">
                     <h2>Bildirimler</h2>
@@ -102,6 +118,7 @@
                 </div>
                 <div id="customer-notifications"></div>
             </article>
+        </div>
         </section>
     </main>
 

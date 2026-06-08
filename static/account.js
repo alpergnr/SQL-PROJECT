@@ -225,4 +225,19 @@
     });
 
     loadAccount().catch((error) => showToast(error.message, "error"));
+
+    // Müşteri Paneli Sekme Değiştirme Mantığı
+    document.querySelectorAll('#customer-tabs button').forEach(button => {
+        button.addEventListener('click', () => {
+            // 1. Üst menüdeki tüm butonlardan active sınıfını kaldır
+            document.querySelectorAll('#customer-tabs button').forEach(b => b.classList.remove('active'));
+            // 2. Tüm müşteri paneli sekmelerini gizle
+            document.querySelectorAll('.admin-tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 3. Tıklanan butonu ve hedef sekmeyi aktif et
+            button.classList.add('active');
+            const targetId = button.getAttribute('data-target');
+            document.getElementById(targetId).classList.add('active');
+        });
+    });
 })();

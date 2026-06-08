@@ -160,7 +160,9 @@ def admin_panel():
 @app.route("/account")
 @_customer_required
 def account_panel():
-    return redirect(url_for("index"))
+    # redirect yerine account.html'i render etmeliyiz
+    user = repo.get_customer(_current_user_id())
+    return render_template("account.html", user=user)
 
 
 # ─── API Endpoints ─────────────────────────────────────────────────────────────

@@ -19,7 +19,7 @@
             </a>
             <div class="admin-nav-actions">
                 <span class="admin-user">{{ admin_email }}</span>
-                <a href="/" class="btn-secondary" target="_blank">Site</a>
+                <a href="/" class="btn-secondary">Site</a>
                 <a href="/logout" class="btn-secondary">Çıkış</a>
             </div>
         </div>
@@ -32,9 +32,17 @@
                 <p class="section-desc">İlan ekleyin, bilgileri güncelleyin ve yapılan değişiklikleri takip edin.</p>
             </div>
         </header>
+        <div class="admin-tabs" id="admin-tabs">
+            <button class="btn-secondary active" data-target="tab-ekle">Yeni İlan Ekle</button>
+            <button class="btn-secondary" data-target="tab-guncelle">İlan Güncelle</button>
+            <button class="btn-secondary" data-target="tab-islem">Fiyat & Silme</button>
+            <button class="btn-secondary" data-target="tab-ilanlar">Tüm İlanlar</button>
+            <button class="btn-secondary" data-target="tab-sorular">Sorular</button>
+            <button class="btn-secondary" data-target="tab-gecmis">Geçmiş</button>
+        </div>
 
         <section class="admin-grid">
-            <article class="analysis-card admin-panel-card">
+            <div id="tab-ekle" class="admin-tab-content active"><article class="analysis-card admin-panel-card">
                 <div class="analysis-card-head">
                     <h2>Yeni İlan Ekle</h2>
                     <span>Database Insert</span>
@@ -91,9 +99,9 @@
                     </div>
                     <button class="btn-primary" type="submit">İlan Ekle</button>
                 </form>
-            </article>
+            </article></div>
 
-            <article class="analysis-card admin-panel-card">
+            <div id="tab-guncelle" class="admin-tab-content"><article class="analysis-card admin-panel-card">
                 <div class="analysis-card-head">
                     <h2>İlan Güncelle</h2>
                     <span>Database Update</span>
@@ -158,11 +166,11 @@
                     </div>
                     <button class="btn-primary" type="submit">İlanı Güncelle</button>
                 </form>
-            </article>
+            </article></div>
         </section>
 
         <section class="admin-grid admin-grid--lower">
-            <article class="analysis-card">
+            <div id="tab-islem" class="admin-tab-content"><article class="analysis-card">
                 <div class="analysis-card-head">
                     <h2>Hızlı Fiyat Güncelle</h2>
                     <span>Audit Log</span>
@@ -184,19 +192,7 @@
                     </div>
                     <button class="btn-primary" type="submit">Fiyatı Güncelle</button>
                 </form>
-            </article>
-
-            <article class="analysis-card">
-                <div class="analysis-card-head">
-                    <h2>İlanlar</h2>
-                    <span>Canlı Kayıtlar</span>
-                </div>
-                <div id="admin-listings-table" class="admin-table-slot">
-                    <div class="loading-state"><span class="loader"></span><p>Yükleniyor…</p></div>
-                </div>
-            </article>
-
-            <article class="analysis-card">
+            </article> <article class="analysis-card">
                 <div class="analysis-card-head">
                     <h2>İlan Sil</h2>
                     <span>Yayından Kaldır</span>
@@ -214,10 +210,22 @@
                     </div>
                     <button class="btn-primary btn-primary-danger" type="submit">İlanı Sil</button>
                 </form>
-            </article>
+            </article></div>
+
+            <div id="tab-ilanlar" class="admin-tab-content"><article class="analysis-card">
+                <div class="analysis-card-head">
+                    <h2>İlanlar</h2>
+                    <span>Canlı Kayıtlar</span>
+                </div>
+                <div id="admin-listings-table" class="admin-table-slot">
+                    <div class="loading-state"><span class="loader"></span><p>Yükleniyor…</p></div>
+                </div>
+            </article></div>
+
+            
         </section>
 
-        <section class="analysis-card admin-history-card">
+        <div id="tab-sorular" class="admin-tab-content"><section class="analysis-card admin-history-card">
             <div class="analysis-card-head">
                 <h2>Müşteri Soruları</h2>
                 <span>Cevap Bekleyenler</span>
@@ -225,9 +233,9 @@
             <div id="admin-questions-table">
                 <div class="loading-state"><span class="loader"></span><p>Yükleniyor…</p></div>
             </div>
-        </section>
+        </section></div>
 
-        <section class="analysis-card admin-history-card">
+        <div id="tab-gecmis" class="admin-tab-content"><section class="analysis-card admin-history-card">
             <div class="analysis-card-head">
                 <h2>İlan Geçmişi</h2>
                 <span>Son Değişiklikler</span>
@@ -235,7 +243,7 @@
             <div id="admin-history-table">
                 <div class="loading-state"><span class="loader"></span><p>Yükleniyor…</p></div>
             </div>
-        </section>
+        </section></div>
     </main>
 
     <div class="toast-container" id="toast-container"></div>

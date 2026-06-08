@@ -359,4 +359,19 @@
     loadAdmin().catch((error) => {
         showToast(error.message, "error");
     });
+
+    // Admin Panel Tab Değiştirme Mantığı
+    document.querySelectorAll('.admin-tabs button').forEach(button => {
+        button.addEventListener('click', () => {
+            // 1. Tüm butonlardan active sınıfını kaldır
+            document.querySelectorAll('.admin-tabs button').forEach(b => b.classList.remove('active'));
+            // 2. Tüm içerikleri gizle
+            document.querySelectorAll('.admin-tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 3. Tıklanan butonu ve ona ait div'i aktif yap
+            button.classList.add('active');
+            const targetId = button.getAttribute('data-target');
+            document.getElementById(targetId).classList.add('active');
+        });
+    });
 })();
