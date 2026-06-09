@@ -11,6 +11,7 @@
 | Altay Yeles | Alper Güner | Mustafa Ulaş Karaaslan |
 | Mehmet Can Öztürk | Emre Aslan | 
 
+Presentation : https://youtu.be/aufERaNh6Dc
 ---
 
 ## 📌 Project Idea
